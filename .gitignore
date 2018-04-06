@@ -1,2 +1,4 @@
 /tmp/*
 /Texts/*
+config.ini
+/__pycache__/*
