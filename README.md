@@ -7,19 +7,22 @@ jieba:
   
 ckip(中研院)  
 1. 到官網申請線上服務(中研院斷詞沒有線下服務)
-http://ckipsvr.iis.sinica.edu.tw → 線上服務申請 → 按此申請 → 到信箱啟動帳號 → 等待一段時間開通帳號  
-2. 修改`config.ini.example`，將申請的帳號密碼寫入，並改名成`config.ini`  
-  
+http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按此申請 → 到信箱啟動帳號 → 等待一段時間開通帳號  
+2. 修改此目錄底下`config.ini.example`，將申請的帳號密碼寫入，並改名成`config.ini`  
+
 # Usage
-`python SplitAndExtract.py`
-`python Tokenize.py <Tokenize tool> <ouput format> <path_to_txt_file / directory>`
-<Tokenize tool> : `"jieba"` | `"ckip"`  
-<ouput format> : `"shell"` (直接印在shell上) | `"txt"` | `"json"`
-<path_to_txt_file / directory> : 例如 `"/home/shulin/Summarize_People/Texts/"` 或 `"/home/shulin/Summarize_People/Texts/何基明.txt"` (Windows的自行類推)  
+`python SplitAndExtract.py`  
+  
+`python Tokenize.py <Tokenize tool> <ouput format> <path_to_txt_file / directory>`  
+  
+Tokenize tool : `"jieba"` 或 `"ckip"`  
+ouput format : `"shell"` (直接印在shell上) 或 `"txt"` 或 `"json"`  
+path_to_txt_file / directory : 例如 `"/home/shulin/Summarize_People/Texts/"`(分析該directory下的所有txt) 或 `"/home/shulin/Summarize_People/Texts/何基明.txt"` (Windows的自行類推)  
   
 # Regular Expression in SplitAndExtract
-^ : 這裡是行首  
-\w+ ： 一個以上的字符(人名)  
+`^(\w+) ?\.+ (\d\d\d)$`:  
+^ : 這裡是行首  
+\w+ ： 一個以上的字符(人名)  
  ？ ：有可能有空白有可能沒有 (四字人名後面沒有空格)  
 \.+ ：一個以上的.  
 \d\d\d : 三個數字(頁數)  
