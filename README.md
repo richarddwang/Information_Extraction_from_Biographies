@@ -13,8 +13,8 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 # Usage
 `python SplitAndExtract.py`  
 `python Tokenize.py <Tokenize tool> <ouput format> <path_to_txt_file / directory>`  
-Tokenize tool : `"jieba"` | `"ckip"`  
-ouput format : `"shell"` (直接印在shell上) | `"txt"` | `"json"`  
+Tokenize tool : `"jieba"` 或 `"ckip"`  
+ouput format : `"shell"` (直接印在shell上) 或 `"txt"` 或 `"json"`  
 path_to_txt_file / directory : 例如 `"/home/shulin/Summarize_People/Texts/"`(分析該directory下的所有txt) 或 `"/home/shulin/Summarize_People/Texts/何基明.txt"` (Windows的自行類推)  
   
 # Regular Expression in SplitAndExtract
