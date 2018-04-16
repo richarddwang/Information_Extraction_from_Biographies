@@ -20,9 +20,9 @@ ouput format : `"shell"` (直接印在shell上) 或 `"txt"` 或 `"json"`
 path_to_txt_file / directory : 例如 `"/home/shulin/Summarize_People/Texts/"`(分析該directory下的所有txt) 或 `"/home/shulin/Summarize_People/Texts/何基明.txt"` (Windows的自行類推)  
   
 # Regular Expression in SplitAndExtract
-`^(\w+) ?\.+ (\d\d\d)$`:  
+`^(\w　?\w+) ?\.+ (\d\d\d)$`:  
 ^ : 這裡是行首  
-\w+ ： 一個以上的字符(人名)  
+\w　?\w+ ： (人名) 一個文字，後面可能會接一個全形符號(二字人名時),再接數個文字  
  ？ ：有可能有空白有可能沒有 (四字人名後面沒有空格)  
 \.+ ：一個以上的.  
 \d\d\d : 三個數字(頁數)  
