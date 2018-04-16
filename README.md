@@ -21,8 +21,8 @@ path_to_txt_file / directory : 例如 `"/home/shulin/Summarize_People/Texts/"`(�
   
 # Regular Expression in SplitAndExtract
 `^(\w　?\w+) ?\.+ (\d\d\d)$`:  
-^ : 這裡是行首  
-\w　?\w+ ： (人名) 一個文字，後面可能會接一個全形符號(二字人名時),再接數個文字  
+^ : 這裡是行首  
+\w　?\w+ ： (人名) 一個文字，後面可能會接一個全形符號(二字人名時),再接數個文字  
  ？ ：有可能有空白有可能沒有 (四字人名後面沒有空格)  
 \.+ ：一個以上的.  
 \d\d\d : 三個數字(頁數)  
