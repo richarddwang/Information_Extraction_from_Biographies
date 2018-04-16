@@ -7,7 +7,7 @@ jieba:
   
 ckip(中研院)  
 1. 到官網申請線上服務(中研院斷詞沒有線下服務)
-http://ckipsvr.iis.sinica.edu.tw → 線上服務申請 → 按此申請 → 到信箱啟動帳號 → 等待一段時間開通帳號  
+http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按此申請 → 到信箱啟動帳號 → 等待一段時間開通帳號  
 2. 修改此目錄底下`config.ini.example`，將申請的帳號密碼寫入，並改名成`config.ini`  
 
 # Usage
