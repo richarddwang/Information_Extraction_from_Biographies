@@ -4,6 +4,7 @@ import os # 處理path 用
 import json # 通用的資料格式
 import sys
 import re
+from SplitAndExtract import extract_names_ranges # 用來解析人名，新增到jieba 的辭典
 jieba.set_dictionary('dict.txt.big') # 輔助的jieba 的辭典
 
 # 開啟所有txt files, 各自斷詞, 輸出
@@ -47,11 +48,20 @@ def process_input(input_path):
 
 # 切出純文字的tokens
 def jieba_tokenize(text):
+    enhance_jieba_dict() # 因為是暫時性的，沒辦法做一次後就不做(加入到辭典)
+    
     text = text.replace("\n", "") # 如果有詞剛好橫跨行尾，會被切成兩個詞，所以要把行尾去掉
     text = text.replace(" ", "")
     tokens = list(jieba.cut(text)) # 此時的結果仍包含標點符號、數字...
     word_tokens = list(filter(lambda token: token.isalpha(), tokens)) # 只留純文字的token
     return word_tokens
+
+# 暫時性的把一些資訊加到辭典裡
+def enhance_jieba_dict():
+    names_and_ranges = extract_names_ranges()
+    for person in names_and_ranges:
+        name = person[0]
+        jieba.add_word(name, tag='nr') # tag 是其詞性
 
 def ckip_tokenize(text):
     text = text.replace("\n", "") # 如果有詞剛好橫跨行尾，會被切成兩個詞，所以要把行尾去掉
@@ -77,7 +87,7 @@ def process_output(tokens, output_format, directory_path, txt_name, tool):
         print(tokens)
     # 在原處產生txt檔
     elif output_format == "txt":
-        with open(directory_path + txt_name[:-4] + tool + "_tokens.txt", 'w') as f:
+        with open(directory_path + txt_name[:-4] + "_" + tool + "_tokens.txt", 'w') as f:
             f.write("\n".join(tokens))
     # 在原處產生json格式的檔案
     elif output_format == "json":
@@ -97,3 +107,4 @@ class InputError(Exception):
 if __name__ == "__main__":
     assert len(sys.argv) == 4, "Tokenize.py <Tokenize tool > <ouput format> <path_to_txt_file / directory>"
     main(sys.argv[3], sys.argv[2], sys.argv[1])
+
