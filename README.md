@@ -11,9 +11,11 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 2. 修改此目錄底下`config.ini.example`，將申請的帳號密碼寫入，並改名成`config.ini`  
 
 # Usage
-Try `python main.py --most 5` first,  
-and then explore other usage with `python main.py -h`,  
-and theres are examples at the bottom of `main.py`  
+先試試看 `python main.py --most 5 --set-up`  
+之後就不需要再加上`--set-up`了， 不需要重複轉檔和斷詞  
+  
+用 `python main.py -h`發現其他option  
+在`main.py` 最底下也有兩個使用例  
   
 Note: 另兩個py檔也有command line 的使用介面， 在檔案的最下面有該檔案的使用範例
   
