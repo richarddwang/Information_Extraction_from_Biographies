@@ -85,7 +85,7 @@ if __name__ == '__main__':
                            help="specify you want to count word with how many chars")
     argParser.add_argument('-m','--most',
                            type=int,
-                           help="specify you want to the most how many frequent words")
+                           help="specify you want to know the most how many frequent words")
     args = argParser.parse_args() # parse a list of strings, defaults to sys.argv
     
     for tool in args.tools:
