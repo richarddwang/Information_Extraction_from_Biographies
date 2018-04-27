@@ -1,66 +1,55 @@
-import jieba # 斷詞的工具
-from CKIP_client import ckip_client # 中研院斷詞
+import argparse
 import os # 處理path 用
 import json # 通用的資料格式
 import sys
 import re
-from SplitAndExtract import extract_names_ranges # 用來解析人名，新增到jieba 的辭典
+import jieba # 斷詞的工具
 jieba.set_dictionary('dict.txt.big') # 輔助的jieba 的辭典
+from CKIP_client import ckip_client # 中研院斷詞
 
-# 開啟所有txt files, 各自斷詞, 輸出
-def main(input_path, output_format, tool):
-    directory_path, txt_names = process_input(input_path)
-    for txt_name in txt_names:
-        with open(directory_path + txt_name, 'rU') as f:
+# 開啟所有txt files, 各自斷詞輸出
+def tokenize(tokenizeTool, people=None):
+    txts = get_txtFiles(people) # 回傳指定人物們的txt檔路徑，若沒有指定則是全部的txt檔的路徑
+    
+    for txt in txts:
+        with open(txt, 'r') as f:
             text = f.read()
             
-        if tool == "jieba":
+        if tokenizeTool == "jieba":
             tokens = jieba_tokenize(text)
-        elif tool == "ckip":
+        elif tokenizeTool == "ckip":
             tokens = ckip_tokenize(text)
         else:
-            raise InputError("Unkown tokenize tool.")
+            raise InputError("Unkown tokenize tool.")        
         
-        process_output(tokens, output_format, directory_path, txt_name, tool)
+        # 輸出成檔案儲存
+        with open(txt[:-4] + "_" + tokenizeTool + "_tokens", 'w') as f:
+            f.write("\n".join(tokens))
 
-# 判斷INPUT_PATH 是一個txt檔案的路徑還是一個資料夾路徑
-# 回傳所有txt 檔案的名子(包括副檔名)
-def process_input(input_path):
-    base_path, extension = os.path.splitext(input_path) # 切出副檔名
-    directory_path = os.path.dirname(input_path) + "/" # 切出路徑裡的目錄部份
-    
-    txt_names = []
-    # 如果INPUT_PATH 是一個txt檔案的路徑
-    # 切出奇檔案名子
-    if extension == '.txt': 
-        assert os.path.dirname(input_path) != "", "You should specify full path to the txt file."
-        txt_names.append(os.path.basename(input_path))
-    # 如果INPUT_PATH 是一個資料夾的路徑
-    # 網羅其下面的所有txt 檔案的名子
-    elif extension == '': 
-        assert input_path[-1] == "/", "You should put / at the end of the directory path."
-        txt_names = list(filter(lambda name: '.txt' in name, os.listdir(input_path)))
-    # 都不是就報錯
+def get_txtFiles(people_names):
+    if people_names is None:
+        txt_files = list(filter(lambda f: f[-4:]=='.txt', # 取後面4個字是.txt 的
+                                  os.listdir('./Texts'))) # 從./Texts 底下所有檔案或目錄取
+        return ['./Texts/' + txtFile for txtFile in txt_files] # 將所有txt檔名轉成路徑的list
     else:
-        raise InputError("Only accept a path to a txt file or a directory path")
+        return ['./Texts/{}.txt'.format(person_name) for person_name in people_names]
     
-    return directory_path, txt_names
-
 # 切出純文字的tokens
 def jieba_tokenize(text):
     enhance_jieba_dict() # 因為是暫時性的，沒辦法做一次後就不做(加入到辭典)
     
     text = text.replace("\n", "") # 如果有詞剛好橫跨行尾，會被切成兩個詞，所以要把行尾去掉
     text = text.replace(" ", "")
-    tokens = list(jieba.cut(text)) # 此時的結果仍包含標點符號、數字...
+    tokens = list(jieba.cut(text)) # 此時的仍包含標點符號、數字...的token
     word_tokens = list(filter(lambda token: token.isalpha(), tokens)) # 只留純文字的token
     return word_tokens
 
 # 暫時性的把一些資訊加到辭典裡
 def enhance_jieba_dict():
-    names_and_ranges = extract_names_ranges()
-    for person in names_and_ranges:
-        name = person[0]
+    with open('./tmp/names.json', 'r') as f:
+        names = json.load(f)
+    
+    for name in names:
         jieba.add_word(name, tag='nr') # tag 是其詞性
 
 def ckip_tokenize(text):
@@ -71,7 +60,7 @@ def ckip_tokenize(text):
     sentences = re.split("，|。", text) # 利用逗號和句號切成數段句子，避免一次對ckip server的request 太大
     for sent in sentences:
         result, length = ckip_client(sent + "。") # 將每句後面加上句點，避免ckip server 的internal error
-        result = result.split("\u3000") # 結果會以一個unicode的字符來隔開
+        result = result.split("　") # (token, POS tag) 間會以全形空白來隔開
         for item in result:
             cut_index = item.find('(') # 每個斷詞後面會括號其詞性
             token = item[:cut_index] # 我們只取該token，不取詞性
@@ -80,23 +69,6 @@ def ckip_tokenize(text):
                 
     return word_tokens
 
-# 根據ouput format 做不同方式的輸出
-def process_output(tokens, output_format, directory_path, txt_name, tool):
-    # 直接印在shell上
-    if output_format == "shell": 
-        print(tokens)
-    # 在原處產生txt檔
-    elif output_format == "txt":
-        with open(directory_path + txt_name[:-4] + "_" + tool + "_tokens.txt", 'w') as f:
-            f.write("\n".join(tokens))
-    # 在原處產生json格式的檔案
-    elif output_format == "json":
-        with open(directory_path + txt_name[:-4] + tool + "_tokens.json", 'w') as f:
-            json.dump(tokens, f)
-    # 都不是就報錯
-    else:
-        raise InputError("Wrong ouput format, choose \"shell\", \"txt\",or \"json\"")
-        
 class InputError(Exception):
     def _init_(self, string):
         self.message = string
@@ -105,6 +77,26 @@ class InputError(Exception):
         return repr(self.message)
 
 if __name__ == "__main__":
-    assert len(sys.argv) == 4, "Tokenize.py <Tokenize tool > <ouput format> <path_to_txt_file / directory>"
-    main(sys.argv[3], sys.argv[2], sys.argv[1])
+    # 這邊的說明請看Statistic.py 的下方
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument('-p', '--people',
+                           nargs='+', 
+                           help="specify some people to analyze, otherwise analyze all")
+    argParser.add_argument('-t', '--tool', 
+                           nargs='+',
+                           choices=['ckip', 'jieba'], 
+                           required=True, 
+                           metavar="TOOLS", 
+                           dest='tools', 
+                           help="specify one or two tools to tokenize.")
+    args = argParser.parse_args()
+    
+    for tool in args.tools:
+        tokenize(tool, args.people)
+
+#========================================================
+#                      Test
+#========================================================
+# python Tokenize.py --tools ckip 
+# python Tokenize.py -t jieba --people 何凡 何基明
 
