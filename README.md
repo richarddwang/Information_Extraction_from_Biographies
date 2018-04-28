@@ -17,7 +17,7 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 用 `python main.py -h`發現其他option  
 在`main.py` 最底下也有兩個使用例  
   
-Note: 另兩個py檔也有command line 的使用介面， 在檔案的最下面有該檔案的使用範例
+Note: 另三個py檔也可以獨立運作， 並有command line 的使用介面， 在檔案的最下面有該檔案的CLI的使用範例
   
 # Regular Expression in SplitAndExtract
 `^(\w　?\w+) ?\.+ (\d\d\d)$`:  
