@@ -1,4 +1,14 @@
-/tmp/*
-/Texts/*
+/DataBase/tmp/*
+/DataBase/raw_txt/*
+/DataBase/mature_txt/*
+/DataBase/metaData/*
+/DataBase/token/*
 config.ini
 /__pycache__/*
+
+!/DataBase/README.md
+!/DataBase/tmp/README.md
+!/DataBase/raw_txt/README.md
+!/DataBase/mature_txt/README.md
+!/DataBase/metaData/README.md
+!/DataBase/token/README.md
