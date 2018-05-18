@@ -20,14 +20,9 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 Note: 另三個py檔也可以獨立運作， 並有command line 的使用介面， 在檔案的最下面有該檔案的CLI的使用範例
   
 # Regular Expression in SplitAndExtract
-`^(\w　?\w+) ?\.+ (\d\d\d)$`:  
-^ : 這裡是行首  
-\w　?\w+ ： (人名) 一個文字，後面可能會接一個全形符號(二字人名時),再接數個文字  
- ？ ：有可能有空白有可能沒有 (四字人名後面沒有空格)  
-\.+ ：一個以上的.  
-\d\d\d : 三個數字(頁數)  
-$ ：這裡是行尾  
-() : 括號裏面的pattern 所match到的東西形成一個group  
+`r'^(\w+　?\w+) ? ?\.+ (\d\d\d)$'`:  
+
+ 
   
 re.findall 會回傳list of tuples
 每個tuple 代表一個對pattern的match 裡的groups, i.e. tuple為 (group1, group2, ...)  
