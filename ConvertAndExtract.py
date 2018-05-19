@@ -74,7 +74,7 @@ def divide_n_parts(lst, n):
     # -> [[0, 3, 6, 9, 12], [1, 4, 7, 10], [2, 5, 8, 11]]
 
 def output(biographies_s):
-    all_biographies = reduce(lambda x,y: x + y, biographies_s) # 連接成list of biographie"s"
+    all_biographies = reduce(lambda x,y: x + y, biographies_s) # 分開的part再次結合成一體，也就是list of 所有傳記
 
     threads = []
     # 為n個部分的傳記s各設一個thread來轉換並輸出txt檔
