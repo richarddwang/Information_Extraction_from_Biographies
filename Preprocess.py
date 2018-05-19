@@ -60,7 +60,7 @@ def process_biograpy(biography):
 def process_text(text):
     # 清掉章節標題
     match = re.search(r'^(第\w章)　(\w+)$', text, flags=re.MULTILINE)
-    if match: #
+    if match: # 有可能沒有章節標題， 所以要先看有沒有找到
         chapter_th = match[1]
         category   = match[2]
         text = text.replace("{}　{}\n".format(chapter_th, category), "")
@@ -110,6 +110,7 @@ def distinguish_footnote(text):
             
     content_text = "".join(content_part_s) # 把各頁的內文部分結合成內文
     footnote_text = "".join(footnote_part_s) # 把各頁的附註部分結合成附註
+    
     return content_text, footnote_text
 
 def paragraph_clarify(text):
@@ -145,13 +146,13 @@ def process_content(content, biography, footnote_indices):
     reg = name + "（(.+，)?([\d?.]*)-([\d?.]*)）"
     title = re.search(reg, content, flags=re.MULTILINE)
     if len(title.groups()) == 2:
-        biography["Birth"] = title[1]
-        biography["Death"] = title[2]
+        biography["Birth"] = title[1] # group1
+        biography["Death"] = title[2] # group2
     else:
         biography["Alias_s"].append(title[1])
-        biography["Birth"] = title[2]
+        biography["Birth"] = title[2] 
         biography["Death"] = title[3]
-    content = content.replace(title[0], "")
+    content = content.replace(title[0], "") # replace Whole match with empty string
     
     return content
 
