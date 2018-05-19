@@ -11,8 +11,8 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 2. 修改此目錄底下`config.ini.example`，將申請的帳號密碼寫入，並改名成`config.ini`  
 
 # Usage
-1. Convert pdf into biographies in txt, and create meta data schema for every biography
+1. Convert pdf into biographies in txt, and create meta data schema for every biography  
 `Python ConverAndExtract.py`
 
-2. Normalize text and extract some meta data(birth, death, ...) to biography
+2. Normalize text and extract some meta data(birth, death, ...) to biography  
 `Python Preprocess.py`
