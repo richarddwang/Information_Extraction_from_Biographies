@@ -18,5 +18,5 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 `python Preprocess.py`
 
 # More
-See more explanation to let you figure this project out quickly !!  
+See more explanation to know more about this project and help you figure out the code !!  
 [Gihub Wiki](https://github.com/frankie8518/Summarize_People/wiki)
