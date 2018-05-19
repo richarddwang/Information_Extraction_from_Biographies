@@ -6,7 +6,7 @@ import threading # 多線程平行化處理用
 from functools import reduce # functional programming 的一個function
 
 def main():
-    extract_catalog() # 將目錄部份轉成純文字檔儲存在
+    extract_catalog() # 將目錄部份轉成純文字檔儲存
     indexes = extract_indexes() # 將目錄的項目和對應頁數擷取出來
     biographies = set_biographies_schema(indexes) # 幫每個人物傳記做一個key-value形式的檔案型資料庫
     biographies_s = divide_n_parts(biographies, 4) # 切成n等分以便作平行化處理
@@ -15,7 +15,7 @@ def main():
     output(biographies_s)
     
 def extract_catalog():
-    # 如同在shell, 命令pdfbox 將 社會與文化篇.pdf 的3~9頁轉成純文字檔儲存在下
+    # 如同在shell, 命令pdfbox 將 社會與文化篇.pdf 的3~9頁轉成純文字檔儲存
     # subprocess.run 的參數是 list of strings without space
     subprocess.run('java -jar pdfbox-app-1.8.13.jar ExtractText -startPage 3 -endPage 9 社會與文化篇.pdf ./DataBase/tmp/index.txt'.split()) # 
 
