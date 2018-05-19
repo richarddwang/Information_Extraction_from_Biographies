@@ -12,7 +12,7 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 
 # Usage
 1. Convert pdf into biographies in txt, and create meta data schema for every biography  
-`Python ConverAndExtract.py`
+`python ConverAndExtract.py`
 
 2. Normalize text and extract some meta data(birth, death, ...) to biography  
-`Python Preprocess.py`
+`python Preprocess.py`
