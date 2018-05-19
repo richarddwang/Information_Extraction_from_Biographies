@@ -16,3 +16,7 @@ http://ckipsvr.iis.sinica.edu.tw/webservice.htm → 申請服務帳號 → 按�
 
 2. Normalize text and extract some meta data(birth, death, ...) to biography  
 `python Preprocess.py`
+
+# More
+See more explanation to let you figure this project out quickly !!  
+[Gihub Wiki](https://github.com/frankie8518/Summarize_People/wiki)
