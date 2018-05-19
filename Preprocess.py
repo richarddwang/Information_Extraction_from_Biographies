@@ -5,12 +5,14 @@ import subprocess
 import math
 
 def main():
-    #
+    # 抽取所有傳記的資訊
     biographies = get_biographies()
+    
+    # normalize傳記文本，並同時存一些傳記資訊
     for biography in biographies:
         process_biograpy(biography)
         
-    #
+    # 輸出所有人名，方便之後的NER
     output_names(biographies)
     
 def get_biographies():
@@ -33,20 +35,20 @@ def process_biograpy(biography):
     with open('./DataBase/raw_txt/{}-{}.txt'.format(startPage, name), 'r') as f:
         text = f.read()
 
-    #
+    # 文本整體的處理，並找出附註的小數字們
     text, footnote_indices = process_text(text)
 
-    #
+    # 將內文和附註切開
     content, footnote = distinguish_footnote(text)
 
-    #
+    # 處理newline，內文分出段落
     content = paragraph_clarify(content)
     footnote = paragraph_clarify(footnote)
 
-    #
+    # 將footnote 處理後加進傳記的資訊裡
     process_footnote(footnote, biography)
 
-    #
+    # 針對內容作處理
     content = process_content(content, biography, footnote_indices)
 
     # Output
@@ -56,38 +58,43 @@ def process_biograpy(biography):
         json.dump(biography, f)
 
 def process_text(text):
-    #
+    # 清掉章節標題
     match = re.search(r'^(第\w章)　(\w+)$', text, flags=re.MULTILINE)
-    if match: #
+    if match: # 有可能沒有章節標題， 所以要先看有沒有找到
         chapter_th = match[1]
         category   = match[2]
         text = text.replace("{}　{}\n".format(chapter_th, category), "")
         text = text.replace("{}\n{}\n".format(category, chapter_th), "")
 
-    #
+    # 清掉所有不需要的空格
+    # 先把需要的空格轉成另一個字符記錄起來，清完空格再回復原狀
     text = re.sub(r'^(\d) (\d) (\d)$', '\g<1>Ä\g<2>Ä\g<3>', text ,flags=re.MULTILINE)
     text = re.sub(r'([a-zA-Z,]) ([a-zA-Z,])', '\g<1>Ä\g<2>', text)
     text = re.sub(r'(\n\d+) ', '\g<1>Ä', text)
     text = text.replace(" ","")
     text = text.replace("Ä", " ")
 
-    #
+    # 找出每條附註前面會有的小數字們
     footnote_indices = re.findall(r'\n(\d+) \w\w', text)
 
     return text, footnote_indices
 
 def distinguish_footnote(text):
+    # 先依頁碼分成多個頁
     page_s = re.split(r'\d \d \d', text)
-    content_part_s = []
-    footnote_part_s = []
+    content_part_s = [] # 各頁的內文部分
+    footnote_part_s = [] # 各頁的附註部分
     for page in page_s:
-        cut_at = math.inf
+        cut_at = math.inf # 內文和附註的切割點
 
+        # 利用附註小數字的格式找出本頁第一條附註位置
         match = re.search(r'^\d+ ', page , flags=re.MULTILINE)
         if match:
             mStart, mEnd = match.span()
             cut_at = mStart
 
+        # 一條附註可能被斷到兩頁，則下一頁的附註一開始就是上一頁的附註的接續，沒有附註小數字
+        # 看附註結尾來辨識出在下一頁開頭的接續的附註(不是完全可靠)
         match = re.search(r'^.+，(頁[\d-]+|第[\d-]+版)。$',page ,flags=re.MULTILINE)
         if match:
             mStart, mEnd = match.span()
@@ -101,12 +108,13 @@ def distinguish_footnote(text):
         else:
             content_part_s.append(page)
             
-    content_text = "".join(content_part_s)
-    footnote_text = "".join(footnote_part_s)
-
+    content_text = "".join(content_part_s) # 把各頁的內文部分結合成內文
+    footnote_text = "".join(footnote_part_s) # 把各頁的附註部分結合成附註
+    
     return content_text, footnote_text
 
 def paragraph_clarify(text):
+    # 因為句號後面換行的通常是一段落的結尾(但也可能不是)
     text = text.replace("。\n", "Å")
     text = text.replace("\n", "")
     text = text.replace("Å", "。\n\n")
@@ -114,37 +122,38 @@ def paragraph_clarify(text):
     return text
 
 def process_footnote(footnote, biography):
-    footnote = footnote[:-2]
-    f_lines = footnote.split('\n\n')
-    biography["Footnotes"] = list(map(lambda line: line.split(" "), f_lines))
+    footnote = footnote[:-2] # 去掉最後的兩個newline
+    f_lines = footnote.split('\n\n') # 這樣最後就不會多一個空的split，各條附註分開
+    biography["Footnotes"] = list(map(lambda line: line.split(" "), f_lines)) # 把各條附註小數字和其註釋分開
 
 def process_content(content, biography, footnote_indices):
     name = biography["Name"]
     
-    #
+    # 去除內文中的附註小數字
     for index in footnote_indices:
-        # test if behind people name
+        # 第一種附註小數字出現的場合
         content = content.replace("{}{}（".format(name, index), "{}（".format(name))
+        # 第二種附註小數字出現的場合
         content = re.sub("([。，])" + index, r'\g<1>', content)
 
-    #
+    # 從內文去掉傳記撰者，並保存在傳記資訊
     match = re.search(r'（([\w、]+)撰寫?）', content, flags=re.MULTILINE) # $
     author_line = match[0]
     biography["Authors"] = match[1].split("、")
     content = content.replace(author_line, "")
 
-    #
+    # 從內文去掉傳記標題，保存別名， 生日日期，死亡日期
     reg = name + "（(.+，)?([\d?.]*)-([\d?.]*)）"
     title = re.search(reg, content, flags=re.MULTILINE)
     if len(title.groups()) == 2:
-        biography["Birth"] = title[1]
-        biography["Death"] = title[2]
+        biography["Birth"] = title[1] # group1
+        biography["Death"] = title[2] # group2
     else:
         biography["Alias_s"].append(title[1])
-        biography["Birth"] = title[2]
+        biography["Birth"] = title[2] 
         biography["Death"] = title[3]
+    content = content.replace(title[0], "") # replace Whole match with empty string
     
-    content = content.replace(title[0], "")
     return content
 
 def output_names(biographies):
