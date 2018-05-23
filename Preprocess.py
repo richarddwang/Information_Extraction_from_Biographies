@@ -36,11 +36,21 @@ def process_biograpy(biography):
         text = f.read()
 
     # 文本整體的處理，並找出附註的小數字們
-    text, footnote_indices = process_text(text)
+    text = remove_chapter(text)
 
+    # 找出每條附註前面會有的小數字們
+    footnote_indices = re.findall(r'\n(\d+) \w\w', text)
+    
     # 將內文和附註切開
     content, footnote = distinguish_footnote(text)
 
+    # 去除內文中的附註小數字
+    content = remove_footnoteNumber(content)
+
+    # 清掉所有不需要的空格
+    content = remove_unneedSpace(content)
+    footnote = remove_unneedSpace(footnote)
+    
     # 處理newline，內文分出段落
     content = paragraph_clarify(content)
     footnote = paragraph_clarify(footnote)
@@ -57,31 +67,20 @@ def process_biograpy(biography):
     with open('./DataBase/metaData/{}-{}.json'.format(startPage, name), 'w') as f:
         json.dump(biography, f)
 
-def process_text(text):
+def remove_chapter(text):
     # 清掉章節標題
     match = re.search(r'^(第\w章)　(\w+)$', text, flags=re.MULTILINE)
     if match: # 有可能沒有章節標題， 所以要先看有沒有找到
         chapter_th = match[1]
         category   = match[2]
         text = text.replace("{}　{}\n".format(chapter_th, category), "")
-        text = text.replace("{}\n{}\n".format(category, chapter_th), "")
-
-    # 清掉所有不需要的空格
-    # 先把需要的空格轉成另一個字符記錄起來，清完空格再回復原狀
-    text = re.sub(r'^(\d) (\d) (\d)$', '\g<1>Ä\g<2>Ä\g<3>', text ,flags=re.MULTILINE)
-    text = re.sub(r'([a-zA-Z,]) ([a-zA-Z,])', '\g<1>Ä\g<2>', text)
-    text = re.sub(r'(\n\d+) ', '\g<1>Ä', text)
-    text = text.replace(" ","")
-    text = text.replace("Ä", " ")
-
-    # 找出每條附註前面會有的小數字們
-    footnote_indices = re.findall(r'\n(\d+) \w\w', text)
+        text = text.replace("{}\n{}\n".format(category, chapter_th), "")    
 
     return text, footnote_indices
 
 def distinguish_footnote(text):
     # 先依頁碼分成多個頁
-    page_s = re.split(r'\d \d \d', text)
+    page_s = re.split(r'^\d \d \d$', text, flags=re.MULTILINE)
     content_part_s = [] # 各頁的內文部分
     footnote_part_s = [] # 各頁的附註部分
     for page in page_s:
@@ -95,7 +94,7 @@ def distinguish_footnote(text):
 
         # 一條附註可能被斷到兩頁，則下一頁的附註一開始就是上一頁的附註的接續，沒有附註小數字
         # 看附註結尾來辨識出在下一頁開頭的接續的附註(不是完全可靠)
-        match = re.search(r'^.+，(頁[\d-]+|第[\d-]+版)。$',page ,flags=re.MULTILINE)
+        match = re.search(r'^.+，(頁[\d\- ]+|第[\d\- ]+版)。$',page ,flags=re.MULTILINE)
         if match:
             mStart, mEnd = match.span()
             cut_at = min(mStart, cut_at)
@@ -113,6 +112,24 @@ def distinguish_footnote(text):
     
     return content_text, footnote_text
 
+def remove_footnoteNumber(content):
+    # 第一種附註小數字出現的場合
+    content = re.sub(name+' ?'+str(footnote_indices[0])+' ?（', "{}（".format(name),content , 1)
+    # 第二種附註小數字出現的場合
+    for index in footnote_indices[1:]:  
+        content = re.sub("([。，])" + index, r'\g<1>', content, count=1)
+
+    return content
+
+def remove_unneedSpace(text):
+    # 先把需要的空格轉成另一個字符記錄起來，清完空格再回復原狀
+    text = re.sub(r'([a-zA-Z,]) ([a-zA-Z,])', '\g<1>Ä\g<2>', text)
+    text = re.sub(r'(\n\d+) ', '\g<1>Ä', text)
+    text = text.replace(" ","")
+    text = text.replace("Ä", " ")
+
+    return text
+
 def paragraph_clarify(text):
     # 因為句號後面換行的通常是一段落的結尾(但也可能不是)
     text = text.replace("。\n", "Å")
@@ -127,14 +144,7 @@ def process_footnote(footnote, biography):
     biography["Footnotes"] = list(map(lambda line: line.split(" "), f_lines)) # 把各條附註小數字和其註釋分開
 
 def process_content(content, biography, footnote_indices):
-    name = biography["Name"]
-    
-    # 去除內文中的附註小數字
-    for index in footnote_indices:
-        # 第一種附註小數字出現的場合
-        content = content.replace("{}{}（".format(name, index), "{}（".format(name))
-        # 第二種附註小數字出現的場合
-        content = re.sub("([。，])" + index, r'\g<1>', content)
+    name = biography["Name"]    
 
     # 從內文去掉傳記撰者，並保存在傳記資訊
     match = re.search(r'（([\w、]+)撰寫?）', content, flags=re.MULTILINE) # $
