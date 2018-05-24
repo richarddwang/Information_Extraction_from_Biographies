@@ -39,13 +39,13 @@ def process_biograpy(biography):
     text = remove_chapter(text)
 
     # 找出每條附註前面會有的小數字們
-    footnote_indices = re.findall(r'\n(\d+) \w\w', text)
+    footnote_indices = re.findall(r'\n(\d+) [^\d][^\d]', text)
     
     # 將內文和附註切開
     content, footnote = distinguish_footnote(text)
 
     # 去除內文中的附註小數字
-    content = remove_footnoteNumber(content)
+    content = remove_footnoteNumber(content, name, footnote_indices)
 
     # 清掉所有不需要的空格
     content = remove_unneedSpace(content)
@@ -60,6 +60,8 @@ def process_biograpy(biography):
 
     # 針對內容作處理
     content = process_content(content, biography, footnote_indices)
+
+    #
 
     # Output
     with open('./DataBase/mature_txt/{}-{}.txt'.format(startPage, name), 'w') as f:
@@ -76,7 +78,7 @@ def remove_chapter(text):
         text = text.replace("{}　{}\n".format(chapter_th, category), "")
         text = text.replace("{}\n{}\n".format(category, chapter_th), "")    
 
-    return text, footnote_indices
+    return text
 
 def distinguish_footnote(text):
     # 先依頁碼分成多個頁
@@ -112,7 +114,7 @@ def distinguish_footnote(text):
     
     return content_text, footnote_text
 
-def remove_footnoteNumber(content):
+def remove_footnoteNumber(content, name, footnote_indices):
     # 第一種附註小數字出現的場合
     content = re.sub(name+' ?'+str(footnote_indices[0])+' ?（', "{}（".format(name),content , 1)
     # 第二種附註小數字出現的場合

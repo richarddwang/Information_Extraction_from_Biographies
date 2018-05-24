@@ -3,6 +3,8 @@
 /DataBase/mature_txt/*
 /DataBase/metaData/*
 /DataBase/token/*
+/Tools/ECDICT/ecdict_sqlite
+/Tools/ECDICT/__pycache/*
 config.ini
 /__pycache__/*
 

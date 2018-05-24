@@ -17,7 +17,7 @@ def main():
 def extract_catalog():
     # 如同在shell, 命令pdfbox 將 社會與文化篇.pdf 的3~9頁轉成純文字檔儲存
     # subprocess.run 的參數是 list of strings without space
-    subprocess.run('java -jar pdfbox-app-1.8.13.jar ExtractText -startPage 3 -endPage 9 社會與文化篇.pdf ./DataBase/tmp/index.txt'.split()) # 
+    subprocess.run('java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -startPage 3 -endPage 9 ./DataBase/社會與文化篇.pdf ./DataBase/tmp/index.txt'.split()) # 
 
 def extract_indexes():
     with open('./DataBase/tmp/index.txt', 'r') as f:
@@ -102,7 +102,7 @@ def output_txts(biographies):
         startPage = biography["StartPage"] + 20 
         endPage = biography["EndPage"] + 20
 
-        command = 'java -jar pdfbox-app-1.8.13.jar ExtractText -startPage {} -endPage {} 社會與文化篇.pdf ./DataBase/raw_txt/{}-{}.txt'.format(str(startPage), str(endPage), str(biography["StartPage"]), name)
+        command = 'java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -startPage {} -endPage {} ./DataBase/社會與文化篇.pdf ./DataBase/raw_txt/{}-{}.txt'.format(str(startPage), str(endPage), str(biography["StartPage"]), name)
         subprocess.run(command.split() )
 
 def output_metaDatas(biographies):
