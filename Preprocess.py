@@ -61,8 +61,6 @@ def process_biograpy(biography):
     # 針對內容作處理
     content = process_content(content, biography, footnote_indices)
 
-    #
-
     # Output
     with open('./DataBase/mature_txt/{}-{}.txt'.format(startPage, name), 'w') as f:
         f.write(content)
@@ -125,7 +123,7 @@ def remove_footnoteNumber(content, name, footnote_indices):
 
 def remove_unneedSpace(text):
     # 先把需要的空格轉成另一個字符記錄起來，清完空格再回復原狀
-    text = re.sub(r'([a-zA-Z,]) ([a-zA-Z,])', '\g<1>Ä\g<2>', text)
+    text = re.sub(r'([a-zA-Z,）（]) ([a-zA-Z,）（])', '\g<1>Ä\g<2>', text)
     text = re.sub(r'(\n\d+) ', '\g<1>Ä', text)
     text = text.replace(" ","")
     text = text.replace("Ä", " ")
