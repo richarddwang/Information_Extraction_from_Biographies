@@ -3,36 +3,27 @@ import json
 import os
 import subprocess
 import math
+import argparse
+
+# DataBase
+from pymongo import MongoClient
+client = MongoClient('localhost', 27017) # create a connection to Mongodb
+db = client['Summary'] # access database "Summary"
 
 def main():
-    # 抽取所有傳記的資訊
-    biographies = get_biographies()
-    
     # normalize傳記文本，並同時存一些傳記資訊
-    for biography in biographies:
+    for biography in db.biographies.find():
         process_biograpy(biography)
+
+# Global variables
+OUTPUT_MATURE_TXT_PER_BIOGRAPHY = True
         
-    # 輸出所有人名，方便之後的NER
-    output_names(biographies)
-    
-def get_biographies():
-    json_file_s = list(filter(lambda fle: fle[-5:]=='.json', # 取後面4個字是.json 的
-                                  os.listdir('./DataBase/metaData'))) # 從./Texts 底下所有檔案或目錄取
-    json_filePath_s = [os.getcwd() + '/DataBase/metaData/' + jsonFile for jsonFile in json_file_s] # 將所有json檔名轉成路徑
-
-    biographies = []
-    for json_filePath in json_filePath_s:
-        with open(json_filePath, 'r') as f:
-            biography = json.load(f)
-            biographies.append(biography)
-            
-    return biographies
-
+        
 def process_biograpy(biography):
     name = biography["Name"]
     startPage = biography["StartPage"]
 
-    with open('./DataBase/raw_txt/{}-{}.txt'.format(startPage, name), 'r') as f:
+    with open('./DataBase/raw_txt/{}-{}.txt'.format(startPage, name), 'r', encoding='utf-8') as f:
         text = f.read()
 
     # 文本整體的處理，並找出附註的小數字們
@@ -62,10 +53,10 @@ def process_biograpy(biography):
     content = process_content(content, biography, footnote_indices)
 
     # Output
-    with open('./DataBase/mature_txt/{}-{}.txt'.format(startPage, name), 'w') as f:
-        f.write(content)
-    with open('./DataBase/metaData/{}-{}.json'.format(startPage, name), 'w') as f:
-        json.dump(biography, f)
+    if OUTPUT_MATURE_TXT_PER_BIOGRAPHY is True:
+        output_mature_txt(startPage, name, content)
+        
+    db.biographies.save(biography) # save into collection and replace the document with the same "_id" (original document)
 
 def remove_chapter(text):
     # 清掉章節標題
@@ -124,7 +115,7 @@ def remove_footnoteNumber(content, name, footnote_indices):
 def remove_unneedSpace(text):
     # 先把需要的空格轉成另一個字符記錄起來，清完空格再回復原狀
     text = re.sub(r'([a-zA-Z,）（]) ([a-zA-Z,）（])', '\g<1>Ä\g<2>', text)
-    text = re.sub(r'(\n\d+) ', '\g<1>Ä', text)
+    text = re.sub(r'^(\d+) ', '\g<1>Ä', text, flags=re.MULTILINE)
     text = text.replace(" ","")
     text = text.replace("Ä", " ")
 
@@ -141,8 +132,16 @@ def paragraph_clarify(text):
 def process_footnote(footnote, biography):
     footnote = footnote[:-2] # 去掉最後的兩個newline
     f_lines = footnote.split('\n\n') # 這樣最後就不會多一個空的split，各條附註分開
-    biography["Footnotes"] = list(map(lambda line: line.split(" "), f_lines)) # 把各條附註小數字和其註釋分開
-
+    # There may be footnot line without numbering, see pdf 194,195
+    insert_pos = 0
+    for f_line in f_lines:
+        pair = f_line.split(" ")
+        if len(pair)!=1:
+            biography['Footnotes'].append({'Numbering': pair[0], 'FootnoteText': pair[1],})
+            insert_pos += 1
+        else:
+            biography['Footnotes'][insert_pos-1]['FootnoteText'] += ("\n" + f_line)
+            
 def process_content(content, biography, footnote_indices):
     name = biography["Name"]    
 
@@ -166,13 +165,26 @@ def process_content(content, biography, footnote_indices):
     
     return content
 
-def output_names(biographies):
-    names = []
-    for biography in biographies:
-        names.append(biography["Name"])
-        
-    with open(os.getcwd() + '/DataBase/tmp/names.json', 'w') as f:
-        json.dump(names, f) # 把names 變成json 檔案儲存
+def output_mature_txt(startPage, name, content):
+    try:
+        os.makedirs('./DataBase/mature_txt')
+    except FileExistsError: # directory is exist
+        pass
+    
+    with open('./DataBase/mature_txt/{}-{}.txt'.format(startPage, name), 'w', encoding='utf-8') as f:
+        f.write(content)
 
 if __name__ == "__main__":
+    # 用ArgumentParser 來定義無論optional 和 position arguments(這裡只定義了optional)
+    # 然後用這些定義去parse command line 的arguments, 得到每個option arguments 後的arguments
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument('-n', '--no-output',
+                           action='store_false', # 
+                           dest='whether_output', # 用什麼名稱access 此option後arguments, 預設是option名
+                           help="Output the result for the sake of getting insights.", # -h 裡的敘述
+    )
+    args = argParser.parse_args()
+
+    OUTPUT_MATURE_TXT_PER_BIOGRAPHY = args.whether_output
+    
     main()

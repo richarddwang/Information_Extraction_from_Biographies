@@ -3,9 +3,12 @@
 /DataBase/mature_txt/*
 /DataBase/metaData/*
 /DataBase/token/*
+/DataBase/ner/*
+/DataBase/relation/*
 /Tools/ECDICT/ecdict_sqlite
 /Tools/ECDICT/__pycache/*
-config.ini
+/Tools/stanford-corenlp-full-2018-02-27/*
+*.pyc
 /__pycache__/*
 
 !/DataBase/README.md
