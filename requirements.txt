@@ -1,0 +1,4 @@
+pymongo
+jieba
+stanfordcorenlp
+hanziconv
