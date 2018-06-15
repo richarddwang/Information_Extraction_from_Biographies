@@ -20,8 +20,6 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
 db = client['Summary'] # access database "Summary"
 db['people'] # create collection "people" if not exist
-# Global variables
-OUTPUT_NER_RESULT_PER_BIOGRAPHY = True
 
 def main():
     try:
@@ -64,8 +62,7 @@ def extract_names_from_biograpy(text, biographee_name):
     alias_tuples = get_englishNames(text, names)
     alias_tuples = alias_tuples | get_otherNames(text, biographee_name) # set union
 
-    if OUTPUT_NER_RESULT_PER_BIOGRAPHY is True:
-        output_ner_result(biographee_name, names, alias_tuples)
+    output_ner_result(biographee_name, names, alias_tuples)
     
     return (names, alias_tuples)
     
@@ -177,14 +174,6 @@ def initialize_people(names, alias_tuples):
             update={'$push': {'Alias_s' : alias_pair}},
         )
 
-if __name__ == "__main__":
-    argParser = argparse.ArgumentParser()
-    argParser.add_argument('-n', '--no-output',
-                           action='store_false',
-                           dest='whether_output',
-                           help="Output the result for the sake of getting insights.",)
-    args = argParser.parse_args()
-    OUTPUT_NER_RESULT_PER_BIOGRAPHY = args.whether_output
-    
+if __name__ == "__main__":    
     main()
     

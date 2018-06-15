@@ -4,7 +4,6 @@ import os
 import subprocess
 import math
 import argparse
-
 # DataBase
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
@@ -14,10 +13,6 @@ def main():
     # normalize傳記文本，並同時存一些傳記資訊
     for biography in db.biographies.find():
         process_biograpy(biography)
-
-# Global variables
-OUTPUT_MATURE_TXT_PER_BIOGRAPHY = True
-        
         
 def process_biograpy(biography):
     name = biography["Name"]
@@ -53,8 +48,7 @@ def process_biograpy(biography):
     content = process_content(content, biography, footnote_indices)
 
     # Output
-    if OUTPUT_MATURE_TXT_PER_BIOGRAPHY is True:
-        output_mature_txt(startPage, name, content)
+    output_mature_txt(startPage, name, content)
         
     db.biographies.save(biography) # save into collection and replace the document with the same "_id" (original document)
 
@@ -175,16 +169,4 @@ def output_mature_txt(startPage, name, content):
         f.write(content)
 
 if __name__ == "__main__":
-    # 用ArgumentParser 來定義無論optional 和 position arguments(這裡只定義了optional)
-    # 然後用這些定義去parse command line 的arguments, 得到每個option arguments 後的arguments
-    argParser = argparse.ArgumentParser()
-    argParser.add_argument('-n', '--no-output',
-                           action='store_false', # 
-                           dest='whether_output', # 用什麼名稱access 此option後arguments, 預設是option名
-                           help="Output the result for the sake of getting insights.", # -h 裡的敘述
-    )
-    args = argParser.parse_args()
-
-    OUTPUT_MATURE_TXT_PER_BIOGRAPHY = args.whether_output
-    
     main()
