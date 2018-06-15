@@ -8,13 +8,18 @@ from Cooccurrence import main as cooccurrence
 from Relationship import main as relation
 
 def main():
-    if OUTPUT is True:
-        convert_and_extract()
-        preprocess()
-        get_appendix_names()
-        ner()
-        cooccurrence()
-        relation()
+    print("ConvertAndExtracting")
+    convert_and_extract()
+    print("preprocessing")
+    preprocess()
+    print("getting appendix")
+    get_appendix_names()
+    print("getting NER")
+    ner()
+    print("counting cooccurrence")
+    cooccurrence()
+    print("getting relation")
+    relation()
 
 if __name__ == '__main__':
     main()

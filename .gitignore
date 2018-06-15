@@ -3,7 +3,7 @@
 /DataBase/mature_txt/*
 /DataBase/metaData/*
 /DataBase/token/*
-/DataBase/ner/*
+/DataBase/ner_result/*
 /DataBase/relation/*
 /Tools/ECDICT/ecdict_sqlite
 /Tools/ECDICT/__pycache/*
