@@ -40,3 +40,26 @@ class ThreadWithReturnValue(Thread):
     def join(self):
         Thread.join(self)
         return self._return
+
+def get_biography_text(biography):
+    with open('./DataBase/mature_txt/{}-{}.txt'.format(biography['StartPage'], biography['Name']),'r' ,encoding='utf-8', ) as f:
+        text = f.read()
+    return text
+
+def get_people_in_text_within_people(text, within_people, repeatOK=False):
+    in_text_people = []
+    get = False
+    for person in within_people:
+        #
+        if text.find(person['Name']) is not -1:
+            get = True
+            in_text_people.append(person)
+        #    
+        for (aliasType, aliasName) in person['Alias_s']:
+            if get and not repeatOK:
+                break
+            elif text.find(aliasName) is not -1:
+                get = True
+                in_text_people.append(person)
+                
+    return in_text_people

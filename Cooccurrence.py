@@ -1,6 +1,6 @@
 from collections import namedtuple
 PairValue = namedtuple('PairValue', ['person', 'other', 'value'])
-from Utilities import parallelly_process
+from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
 # database
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
@@ -27,29 +27,6 @@ def main_process(biographies):
         pair_scores = count_coccurrence_score(pair_distances)
         update_scores_to_db(pair_scores)
         
-def get_biography_text(biography):
-    with open('./DataBase/mature_txt/{}-{}.txt'.format(biography['StartPage'], biography['Name']),'r' ,encoding='utf-8', ) as f:
-        text = f.read()
-    return text
-
-def get_people_in_text_within_people(text, within_people, repeatOK=False):
-    in_text_people = []
-    get = False
-    for person in within_people:
-        #
-        if text.find(person['Name']) is not -1:
-            get = True
-            in_text_people.append(person)
-        #    
-        for (aliasType, aliasName) in person['Alias_s']:
-            if get and not repeatOK:
-                break
-            elif text.find(aliasName) is not -1:
-                get = True
-                in_text_people.append(person)
-                
-    return in_text_people
-
 def tag_people_index_in_text(total_people, text):
     total_indexed_people = []
     pos = 1

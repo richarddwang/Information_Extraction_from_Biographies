@@ -2,3 +2,4 @@ pymongo
 jieba
 stanfordcorenlp
 opencc-python-reimplemented
+nltk

@@ -13,8 +13,7 @@ db = client['Summary'] # access database "Summary"
 db.relations.remove() # remove data in collection if exist
 db['relations'] # create collection "cooccurrence" if not exist
 #
-from Cooccurrence import get_biography_text, get_people_in_text_within_people
-from Utilities import parallelly_process
+from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
 
 def main():
     try:
