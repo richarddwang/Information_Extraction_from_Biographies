@@ -1,4 +1,4 @@
 pymongo
 jieba
 stanfordcorenlp
-hanziconv
+opencc-python-reimplemented

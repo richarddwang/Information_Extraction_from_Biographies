@@ -5,16 +5,17 @@ from Utilities import parallelly_process
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
 db = client['Summary'] # access database "Summary"
-db.cooccurrence.remove() # remove data in collection if exist
-db['cooccurrence'] # create collection "cooccurrence" if not exist
+db.cooccurrences.remove() # remove data in collection if exist
+db['cooccurrences'] # create collection "cooccurrence" if not exist
 # Global variables
 DELEMITERS = ["，", "。", "\n\n"]
 INCREASEMENT = [1, 2, 3]
 DISTANCE2SCORE_FACTOR = 4
 DEPRECIATE_FACTOR = 0.65
+DISTANCE_TO_BIOGRAPHEE = 2
 
 def main():
-    parallelly_process(list(db.biographies.find()), 4, main_process)
+    parallelly_process(main_process, list(db.biographies.find()))
     
 def main_process(biographies):
     for biograpy in biographies:
@@ -22,6 +23,7 @@ def main_process(biographies):
         people = get_people_in_text_within_people(text, db.people.find())
         indexed_people = tag_people_index_in_text(people, text)
         pair_distances = count_cooccurence_distance(indexed_people)
+        pair_distances.append( set_cooccurrence_to_biographee(people, biograpy['Name']) )
         pair_scores = count_coccurrence_score(pair_distances)
         update_scores_to_db(pair_scores)
         
@@ -77,11 +79,23 @@ def count_cooccurence_distance(indexed_people):
             if person['_id'] != other_person['_id']:
                 i = person['_id']
                 oi = other_person['_id']
-                pair_distances.append(PairValue(max(i,oi), min(i,oi), other_index-index+1))
+                pair_distances.append( PairValue(max(i,oi), min(i,oi), other_index-index+1) )
     
-    return sorted(pair_distances) # lexicographically sort
+    return pair_distances
+
+def set_cooccurrence_to_biographee(people, biographee_name):
+    biographee = db.people.find_one(filter={'Name':biographee_name})
+    pair_distances = []
+    for person in people:
+        i = biographee['_id']
+        oi = person['_id']
+        pair_distances.append( PairValue( max(i,oi), min(i,oi), DISTANCE_TO_BIOGRAPHEE) )
+
+    return pair_distances
 
 def count_coccurrence_score(pair_distances):
+    pair_distances = sorted(pair_distances) # lexicographically sort
+    
     pair_scores = []
     pair = None
     for tpl in pair_distances:
@@ -98,7 +112,7 @@ def count_coccurrence_score(pair_distances):
 
 def update_scores_to_db(pair_scores):
     for pair_score in pair_scores:
-        db.cooccurrence.insert_one(
+        db.cooccurrences.insert_one(
             {'ID1':pair_score.person,
              'ID2':pair_score.other,
              'Score':pair_score.value,}

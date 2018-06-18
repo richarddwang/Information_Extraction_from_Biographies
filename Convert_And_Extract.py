@@ -8,16 +8,16 @@ db = client['Summary'] # create database "Summary" if not exist
 db['biographies'] # create collection "biographies" if not exist
 
 def main():
-    extract_catalog() # 將目錄部份轉成純文字檔儲存
     indexes = extract_indexes() # 將目錄的項目和對應頁數擷取出來
     initialize_biographies(indexes) # 新增所有人的傳記到資料庫
-    parallelly_process(list(db.biographies.find()), 4, extract_and_output) # 切割並輸出結果
-    
+    parallelly_process(extract_and_output, divide_param=list(db.biographies.find())) # 切割並輸出結果
+    output_biographee_names()
+
 def extract_catalog():
     # 如同在shell, 命令pdfbox 將 社會與文化篇.pdf 的3~9頁轉成純文字檔儲存
     # subprocess.run 的參數是 list of strings without space
-    subprocess.run('java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -startPage 3 -endPage 9 ./DataBase/社會與文化篇.pdf ./DataBase/tmp/index.txt'.split()) # 
-
+    subprocess.run('java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -startPage 3 -endPage 9 -encoding UTF-8 ./DataBase/社會與文化篇.pdf ./DataBase/tmp/index.txt'.split())
+    
 def extract_indexes():
     with open('./DataBase/tmp/index.txt', 'r') as f:
         index_text = f.read()
@@ -73,9 +73,14 @@ def extract_and_output(biograpies):
         startPage = int(biograpy['StartPage']) + 20
         endPage = int(biograpy['EndPage']) + 20
         
-        command = 'java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -startPage {} -endPage {} ./DataBase/社會與文化篇.pdf ./DataBase/raw_txt/{}-{}.txt'.format(str(startPage), str(endPage), str(startPage-20), name)
+        command = 'java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -startPage {} -endPage {} -encoding UTF-8 ./DataBase/社會與文化篇.pdf ./DataBase/raw_txt/{}-{}.txt'.format(str(startPage), str(endPage), str(startPage-20), name)
         subprocess.run(command.split() )
 
+def output_biographee_names():
+    with open('./Tools/Biographee-Names.dict.txt', 'w', encoding='utf-8') as f:
+        for biography in db.biographies.find():
+            print(biography['Name'], "nr", file=f)
+    
 if __name__ == "__main__":
     main()
         

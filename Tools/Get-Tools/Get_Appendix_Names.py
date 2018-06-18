@@ -3,13 +3,13 @@ import re
 import subprocess
 
 def extract_appendix():
-    command = 'java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -encoding utf-8 -startPage 383 -endPage 412 ./DataBase/社會與文化篇.pdf ./DataBase/names_appendix.txt'
+    command = 'java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -encoding utf-8 -startPage 383 -endPage 412 ../../DataBase/社會與文化篇.pdf ../../tmp/names_appendix.txt'
     subprocess.run(command.split() )
 
 
 def split_text():
     title = []
-    with open ('./DataBase/names_appendix.txt', 'r', encoding='utf-8') as f:
+    with open ('../../tmp/names_appendix.txt', 'r', encoding='utf-8') as f:
         text = f.read()
         text = re.sub(r"\d \d \d\n|附錄　人物表\n|臺北市醫院名 院（所）長\n","", text)
     pattern = re.compile("[一二三四五六七八九]、.+一覽")
@@ -115,13 +115,9 @@ def main():
     texts = split_text()
     names = {}
     names = {**p1(texts),**p2(texts),**p3(texts),**p456(texts),**p7(texts),**p8(texts),**p9(texts)}
-    with open ("./DataBase/tmp/names_appendix.json",'w') as f:
-        json.dump(names,f)
-    with open('./DataBase/tmp/names_appendix.json','r') as f:
-        names = json.load(f)
-    with open('./Tools/names_appendix.dict.txt','w',encoding='utf-8') as f:
+    with open('../Appendix-Names.dict.txt','w',encoding='utf-8') as f:
         for name in names:
-            f.write(name+" nr\n") # get user_dict for jieba tokenizing
+            print(name, "nr", file=f) # get user_dict for jieba tokenizing
 
 
 if __name__ == '__main__':

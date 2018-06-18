@@ -1,8 +1,9 @@
 from threading import Thread # 多線程平行化處理用
+PARELLEL_DEGREE = 4
 
 #
-def parallelly_process(lst, n, func, other_args=[], kwargs={}):
-    partLst_s = divide_into_n_parts(lst, n)
+def parallelly_process(func, divide_param, other_args=[], kwargs={}):
+    partLst_s = divide_into_n_parts(divide_param, PARELLEL_DEGREE)
 
     threads = []
     # 為n個部分各設一個thread來

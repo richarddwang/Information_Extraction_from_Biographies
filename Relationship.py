@@ -1,23 +1,24 @@
 import re
 import os
 from stanfordcorenlp import StanfordCoreNLP
-nlp = StanfordCoreNLP('./Tools/stanford-corenlp-full-2018-02-27', lang='zh') 
-from hanziconv import HanziConv
-toSimplified = HanziConv.toSimplified
-toTraditional = HanziConv.toTraditional
+nlp = StanfordCoreNLP('./Tools/stanford-corenlp-full-2018-02-27', lang='zh')
+# Simplified and Traditional Chinese
+from opencc import OpenCC
+toTrad = OpenCC("s2t")
+toSimp = OpenCC("t2s")
 # database
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
 db = client['Summary'] # access database "Summary"
-db.relation.remove() # remove data in collection if exist
-db['relation'] # create collection "cooccurrence" if not exist
+db.relations.remove() # remove data in collection if exist
+db['relations'] # create collection "cooccurrence" if not exist
 #
 from Cooccurrence import get_biography_text, get_people_in_text_within_people
 from Utilities import parallelly_process
 
 def main():
     try:
-        parallelly_process(list(db.biographies.find()), 4, main_process)
+        parallelly_process(main_process, list(db.biographies.find()))
     finally:
         nlp.close()
     
@@ -67,9 +68,9 @@ def relationship(text, main_char, obj):
     relationship(test_txt, "王世慶", "史威廉")
     >>> ['王世慶 合作發表論文 史威廉']
     """
-    text = toSimplified(text)
-    main_char = toSimplified(main_char)
-    obj = toSimplified(obj)
+    text = toSimp.convert(text)
+    main_char = toSimp.convert(main_char)
+    obj = toSimp.convert(obj)
     pos = nlp.pos_tag(text)
     dep = nlp.dependency_parse(text)
     dep_dict = build_dict(pos, dep)
@@ -78,7 +79,7 @@ def relationship(text, main_char, obj):
     if obj in dep_dict.keys():
         if "nsubj" in dep_dict[obj]['dependency'].keys(): # 母亲为xxx / 父亲xx，也就是目標人名與某個詞有直接的主賓依賴關係
             sentence = '{} {} {}'.format(main_char, dep_dict[obj]['dependency']['nsubj'], obj)
-            return [toTraditional(sentence)]
+            return [toTrad.convert(sentence)]
     for word in dep_dict:
         if dep_dict[word]['pos'] == 'VV': # Verb
             if (word not in obj) and (word not in main_char): # 確保斷詞不是人名的一部分
@@ -117,7 +118,7 @@ def relationship(text, main_char, obj):
             word_dep = dep_dict[word]['dependency']
             if "nmod:assmod" in word_dep.keys() and word_dep["nmod:assmod"] == obj: # 目標人名若是某個名詞的修飾詞
                 sentence = '{} {} {}'.format(obj, word, main_char)  # 則很有可能代表關係的方向是 目標 -> 名詞 -> 主要人物
-                return [toTraditional(sentence)]                    
+                return [toTrad.convert(sentence)]                    
             else:
                 for dp in word_dep:
                     if dp == "case" and dep_dict[word]["pos"] == "NN": # 因美国学者田武雅教授的推荐
@@ -125,10 +126,10 @@ def relationship(text, main_char, obj):
                     elif dep_dict[word]['dependency'][dp] == obj:
                         nn_output.append('{} {} {}'.format(main_char, word, obj))
     if verb_output:
-        verb_output = list(map(lambda x: toTraditional(x), verb_output))
+        verb_output = list(map(lambda x: toTrad.convert(x), verb_output))
         return verb_output
     elif nn_output:
-        nn_output = list(map(lambda x: toTraditional(x), nn_output))
+        nn_output = list(map(lambda x: toTrad.convert(x), nn_output))
         return nn_output
     else:
         return "there has no relationships" ## be treated as list when extend the reture value of this func
@@ -182,7 +183,7 @@ def update_relations_to_db(relations):
         relation = relation.split()
         if isinstance(relation, list) and len(relation)==3:
             name1, rel, name2 = relation
-            db.relation.insert_one(
+            db.relations.insert_one(
                 {'ID1' : None,
                  'Name1' : name1,
                  'Relation' : rel,
