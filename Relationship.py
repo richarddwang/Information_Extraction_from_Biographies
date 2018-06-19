@@ -49,7 +49,7 @@ def main_process(biographies):
             lines_have_name = extract_line(text, name)
             for line in lines_have_name:
                 relations.extend(relationship(line, biograpy['Name'], name))
-        relations = filterOut_kinship_relations(relations)
+        relations = filter_relations(relations)
         output_relations_of_biography(relations, biograpy)
         total_relations += relations
                 
@@ -181,20 +181,28 @@ def build_dict(pos, depend):
             output[obj]["dependency"][depd] = subj
     return output    
 
-def filterOut_kinship_relations(relations):
+def filter_relations(relations):
     filtered_relations = []
     for relation in relations:
         splits = relation.split()
         if len(splits) != 3:
             continue
         name1, rel, name2 = splits
+
+        # filter out self pointed
+        if name1 == name2:
+            continue
         
-        notKinship = True
+        # filter out kinship
+        isKinship = False
         for kinship in KINSHIP_CHARS:
             if kinship in rel:
-                notKinship = False
-        if notKinship:
-            filtered_relations.append("{} {} {}".format(name1, rel, name2))
+                isKinship = True
+                break
+        if isKinship:
+            continue
+        
+        filtered_relations.append("{} {} {}".format(name1, rel, name2))
 
     return filtered_relations
 

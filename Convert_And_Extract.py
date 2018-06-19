@@ -1,3 +1,4 @@
+import os
 import subprocess # 在python 中背景地跑shell 指令
 import re # regular expression 的library
 from Utilities import parallelly_process
@@ -8,18 +9,23 @@ db = client['Summary'] # create database "Summary" if not exist
 db['biographies'] # create collection "biographies" if not exist
 
 def main():
+    extract_catalog()
     indexes = extract_indexes() # 將目錄的項目和對應頁數擷取出來
     initialize_biographies(indexes) # 新增所有人的傳記到資料庫
     parallelly_process(extract_and_output, divide_param=list(db.biographies.find())) # 切割並輸出結果
     output_biographee_names()
 
 def extract_catalog():
+    try:
+        os.makedirs('./DataBase/tmp')
+    except FileExistsError:
+        pass
     # 如同在shell, 命令pdfbox 將 社會與文化篇.pdf 的3~9頁轉成純文字檔儲存
     # subprocess.run 的參數是 list of strings without space
     subprocess.run('java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -startPage 3 -endPage 9 -encoding UTF-8 ./DataBase/社會與文化篇.pdf ./DataBase/tmp/index.txt'.split())
     
 def extract_indexes():
-    with open('./DataBase/tmp/index.txt', 'r') as f:
+    with open('./DataBase/tmp/index.txt', 'r', encoding='utf-8') as f:
         index_text = f.read()
 
     match_pairs = re.findall(r'^(\w+　?\w+) ? ?\.+ (\d\d\d)$', index_text, re.MULTILINE)

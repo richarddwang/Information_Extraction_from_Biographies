@@ -3,7 +3,7 @@ import re
 import subprocess
 
 def extract_appendix():
-    command = 'java -jar ./Tools/pdfbox-app-1.8.13.jar ExtractText -encoding utf-8 -startPage 383 -endPage 412 ../../DataBase/社會與文化篇.pdf ../../tmp/names_appendix.txt'
+    command = 'java -jar ../pdfbox-app-1.8.13.jar ExtractText -encoding utf-8 -startPage 383 -endPage 412 ../../DataBase/社會與文化篇.pdf ../../tmp/names_appendix.txt'
     subprocess.run(command.split() )
 
 
@@ -122,4 +122,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

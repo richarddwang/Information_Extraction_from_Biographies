@@ -91,10 +91,13 @@ def extract_names_from_biograpies(biographies):
     return total_names, total_alias_tuples
 
 def extract_names_from_biograpy(text, biography):
+    names = set()
+    names.add(biography['Name'])
+    
     names_jieba = get_names_jieba(text)
     names_stanford = get_names_stanford(text)
     names_kinship, kinship_alias_tuples = get_names_kinship(text, biography['Name'])
-    names = names_jieba | names_stanford | names_kinship # set union
+    names |= (names_jieba | names_stanford | names_kinship) # set union
     names = process_and_filter_names(names)
 
     eng_alias_tuples = get_englishNames(text, names)
@@ -376,7 +379,7 @@ def process_and_filter_names(names):
         # filter
         if( 1 < len(name) <= 4 # 名字至少兩個字
            and name[-1]!='寺' # 篩掉部分標注錯誤的情
-           and name not in ["田野", "伯父", "伯母", "元配", "高中生"] 
+           and name not in ["田野", "伯父", "伯母", "元配", "高中生", "於民國"] 
            and re.match('[a-zA-Z]',name) == None
            and name not in PLACE_NAMES
            and not (name[-1]=="人" and name[:-1] in PLACE_NAMES)
@@ -385,7 +388,9 @@ def process_and_filter_names(names):
                 if name.startswith(surname):
                     first_processed_names.add(name)
                     break # tanaka talou
-                
+            for monk_chars in ["導師", "法師", "和尚"]:
+                if name.endswith(monk_chars):
+                    first_processed_names.add(name)
     #
     first_processed_names = list(first_processed_names)
     second_processed_names = set()
@@ -418,7 +423,7 @@ def get_otherNames(text, biographee_name):
     '''
     otherNames = set()
     aliasTypes = ['字','號','別名','筆名','本名','原名','俗名','受洗名','又名', '藝名', '小名']
-    sent = re.search('.*?。',text ).group() #第一句 
+    sent = text.split("\n\n")[0]
     for aliasType in aliasTypes:
         match = re.search('{}(.*?)[，。]'.format(aliasType),sent)
         if match != None:
@@ -486,4 +491,3 @@ def initialize_people(names, alias_tuples):
 
 if __name__ == "__main__":    
     main()
-    

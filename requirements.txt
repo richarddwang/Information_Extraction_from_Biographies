@@ -3,3 +3,4 @@ jieba
 stanfordcorenlp
 opencc-python-reimplemented
 nltk
+networkx

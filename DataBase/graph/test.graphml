@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key attr.name="Relation" attr.type="string" for="edge" id="d1"/>
+<key attr.name="字" attr.type="string" for="node" id="d0"/>
+<graph edgedefault="directed"><node id="吳守禮">
+  <data key="d0">從宜</data>
+</node>
+<node id="吳思中"/>
+<node id="守經"/>
+<node id="吳筱霞"/>
+<node id="吳昭華"/>
+<node id="吳勤芸"/>
+<node id="吳和玉服"/>
+<node id="吳昭新"/>
+<node id="劉明"/>
+<node id="甘爲霖"/>
+<node id="劉明哲"/>
+<node id="武四郎"/>
+<node id="翁俊明"/>
+<node id="康清塗"/>
+<node id="牛津"/>
+<edge source="吳守禮" target="吳思中">
+  <data key="d1">兒子</data>
+</edge>
+<edge source="吳守禮" target="守經">
+  <data key="d1">弟</data>
+</edge>
+<edge source="吳守禮" target="吳筱霞">
+  <data key="d1">父</data>
+</edge>
+<edge source="吳守禮" target="吳昭華">
+  <data key="d1">兒子</data>
+</edge>
+<edge source="吳守禮" target="吳勤芸">
+  <data key="d1">女兒</data>
+</edge>
+<edge source="吳守禮" target="吳和玉服">
+  <data key="d1">女兒</data>
+</edge>
+<edge source="吳守禮" target="吳昭新">
+  <data key="d1">兒子</data>
+</edge>
+<edge source="吳守禮" target="吳守禮">
+  <data key="d1">著作</data>
+</edge>
+<edge source="吳守禮" target="劉明">
+  <data key="d1">柳營名紳</data>
+</edge>
+<edge source="吳守禮" target="甘爲霖">
+  <data key="d1">編</data>
+</edge>
+<edge source="吳守禮" target="劉明哲">
+  <data key="d1">柳營名紳</data>
+</edge>
+<edge source="吳守禮" target="武四郎">
+  <data key="d1">參與工作</data>
+</edge>
+<edge source="吳守禮" target="翁俊明">
+  <data key="d1">楚蘋</data>
+</edge>
+<edge source="吳守禮" target="康清塗">
+  <data key="d1">編</data>
+</edge>
+<edge source="吳守禮" target="牛津">
+  <data key="d1">並在協助</data>
+</edge>
+</graph></graphml>

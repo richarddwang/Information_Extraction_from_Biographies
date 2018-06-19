@@ -10,7 +10,7 @@ def main():
     for p in range(14):
         surnames += crowl_ja_surname(url_prefix + str(p))
         
-    with open('../../tmp/Japanese-Surnames.json', 'w') as f:
+    with open('../../DataBase/tmp/Japanese-Surnames.json', 'w') as f:
         json.dump(surnames, f)
         
 def crowl_ja_surname(url):
