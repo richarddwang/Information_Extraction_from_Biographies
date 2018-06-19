@@ -11,7 +11,7 @@ jieba.load_userdict('./Tools/Appendix-Names.dict.txt') #
 jieba.load_userdict('./Tools/Biographee-Names.dict.txt') #
 # stanford
 from stanfordcorenlp import StanfordCoreNLP
-nlp = StanfordCoreNLP('./Tools/stanford-corenlp-full-2018-02-27', lang='zh') #
+nlp = None #
 #Simplified and Traditional Chinese
 from opencc import OpenCC
 toTrad = OpenCC("s2t")
@@ -19,8 +19,7 @@ toSimp = OpenCC("t2s")
 # DataBase
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
-db = client['Summary'] # access database "Summary"
-db.people.remove()
+db = client['Summary'] # access database "Summary" 
 db['people'] # create collection "people" if not exist
 
 # Tools and GLOBAL VARIABLES
@@ -43,19 +42,27 @@ BOY_CHILD_CHARS = ["兒子", "子", "兒",]
 MAN_PARENT_CHARS = ["父親", '父', "爹", "爸",]
 WOMAN_PARENT_CHARS = ["母親", '母', "娘", "媽",]
 OTHER_PARENT_CHARS = ["乾爸", "乾媽", "乾爹", "乾娘", "繼父", "繼母", '祖父', '祖母',]
-SMALL_BROTHER_ORDER = ["大弟", "二弟", "三弟"]
+SMALL_BROTHER_ORDER = ["大弟", "二弟", "三弟", "四弟", "五弟", "六弟", "七弟",]
 SMALL_BROTHER_CHARS = ["弟弟", "弟"]
-BIG_BROTHER_ORDER = [""]
+BIG_BROTHER_ORDER = ["大哥", "二哥", "三哥", "四哥", "五哥", "六哥", "七哥",]
+BIG_BROTHER_CHARS = ["兄長", "哥哥", "兄"]
+BIG_SISTER_ORDER = ["大姐", "二姐", "三姐", "四姐", "五姐", "六姐", "七姐",]
+BIG_SISTER_CHARS = ["姐姐", "姐"]
+SMALL_SISTER_ORDER = ["大妹", "二妹", "三妹", "四妹", "五妹", "六妹", "七妹",]
+SMALL_SISTER_CHARS = ["妹妹", "妹"]
 WOMAN_SPOUSE_CHARS = ["妻為", "妻過", "妻子", "娶", "妻"]
 MAN_SPOUSE_CHARS = ["丈夫為", "丈夫", "夫為" , "夫"]
 OTHER_CHILD_CHARS = ["乾女兒", "乾兒子", "乾孫子", ]
 GRAND_CHILD_ORDER = ["長孫", "次孫",]
 GRAND_CHILD_CHARS = ["孫子", "孫"]
 
-KINSHIP_CHARS = GIRL_ORDER_CHILD + BOY_ORDER_CHILD + GRAND_CHILD_ORDER + GIRL_CHILD_CHARS + BOY_CHILD_CHARS + GRAND_CHILD_CHARS + MAN_PARENT_CHARS + WOMAN_PARENT_CHARS + OTHER_PARENT_CHARS + MAN_SPOUSE_CHARS + WOMAN_SPOUSE_CHARS
+KINSHIP_CHARS = GIRL_ORDER_CHILD + BOY_ORDER_CHILD + GRAND_CHILD_ORDER + GIRL_CHILD_CHARS + BOY_CHILD_CHARS + GRAND_CHILD_CHARS + MAN_PARENT_CHARS + WOMAN_PARENT_CHARS + OTHER_PARENT_CHARS + MAN_SPOUSE_CHARS + WOMAN_SPOUSE_CHARS + BIG_SISTER_CHARS + BIG_SISTER_ORDER +BIG_BROTHER_CHARS + BIG_BROTHER_ORDER + SMALL_SISTER_CHARS + SMALL_SISTER_ORDER + SMALL_BROTHER_CHARS + SMALL_BROTHER_ORDER
 
 
 def main():
+    db.people.remove()
+    global nlp
+    nlp = StanfordCoreNLP('./Tools/stanford-corenlp-full-2018-02-27', lang='zh')
     try:
         biographies = list(db.biographies.find())
         results = parallelly_process(extract_names_from_biograpies, divide_param=biographies)
@@ -121,11 +128,11 @@ def get_names_stanford(text):
     return names
 
 def get_names_kinship(text, biographee_name):
-    names_parent, parent_alias_tuples = get_names_parent(text)
-    names_child, child_alias_tuples = get_names_child_and_spouse(text, biographee_name)
-    names_kinship = names_parent | names_child
+    names_childAndSpouse, childAndSpouse_alias_tuples = get_names_child_and_spouse(text, biographee_name)
+    names_otherKinship, otherKinship_alias_tuples = get_otherKinship_names(text)
+    names_kinship = names_otherKinship | names_childAndSpouse
     kinship_alias_tuples = set()
-    for (name, aliasType, alias) in parent_alias_tuples | child_alias_tuples:
+    for (name, aliasType, alias) in otherKinship_alias_tuples | childAndSpouse_alias_tuples:
         if alias is None:
             kinship_alias_tuples.add( (name, "親屬關係暫存", biographee_name+":"+aliasType) )
         else:
@@ -133,22 +140,38 @@ def get_names_kinship(text, biographee_name):
             
     return names_kinship, kinship_alias_tuples
 
-def get_names_parent(text):
-    names_parent = set()
-    parent_alias_tuples = set()
-    # Parent
+def get_otherKinship_names(text):
     first_paragraph = text.split("\n\n")[0]
-    man_parent_names, man_parent_alias_tuples = get_kin_name("|".join(MAN_PARENT_CHARS), first_paragraph, "父")
-    woman_parent_names, woman_parent_alias_tuples = get_kin_name("|".join(WOMAN_PARENT_CHARS), first_paragraph, "母")
-    names_parent |= (man_parent_names | woman_parent_names)
-    parent_alias_tuples |= (man_parent_alias_tuples | woman_parent_alias_tuples)
+    
+    names = set()
+    aliasTuples = set()
+    # Parent
+    man_parent_names, man_parent_aliasTuples = get_kin_name("|".join(MAN_PARENT_CHARS), first_paragraph, "父")
+    woman_parent_names, woman_parent_aliasTuples = get_kin_name("|".join(WOMAN_PARENT_CHARS), first_paragraph, "母")
+    names |= (man_parent_names | woman_parent_names)
+    aliasTuples |= (man_parent_aliasTuples | woman_parent_aliasTuples)
+
     # Other Parents
-    for other_parent_kinship in OTHER_PARENT_CHARS:
-        names_other_parent, other_parent_alias_tuples = get_kin_name(other_parent_kinship, text, other_parent_kinship)
-        names_parent |= names_other_parent
-        parent_alias_tuples |= other_parent_alias_tuples
+    for otherParent_kinship in OTHER_PARENT_CHARS:
+        names_otherParent, otherParent_aliasTuples = get_kin_name(otherParent_kinship, text, otherParent_kinship)
+        names |= names_otherParent
+        aliasTuples |= otherParent_aliasTuples
+
+    # Siblings
+    bigBrother_names, bigBrother_aliasTuples = get_kin_name("|".join(BIG_BROTHER_CHARS), first_paragraph, "兄")
+    smallBrother_names, smallBrother_aliasTuples = get_kin_name("|".join(SMALL_BROTHER_CHARS), first_paragraph, "弟")
+    bigSister_names, bigSister_aliasTuples = get_kin_name("|".join(BIG_SISTER_CHARS), first_paragraph, "姐")
+    smallSister_names, smallSister_aliasTuples = get_kin_name("|".join(SMALL_SISTER_CHARS), first_paragraph, "妹")
+    names |= (bigBrother_names | smallBrother_names | bigSister_names | smallSister_names)
+    aliasTuples |= (bigBrother_aliasTuples | smallBrother_aliasTuples | bigSister_aliasTuples | smallSister_aliasTuples)
+    for (orders, kinship) in [(BIG_BROTHER_ORDER, "兄"), (SMALL_BROTHER_ORDER, "弟"), (BIG_SISTER_ORDER, "姐"), (SMALL_SISTER_ORDER, "妹")]:
+        for order in orders:
+            sibling_names, sibling_aliasTuples = get_kin_name(order, first_paragraph, kinship)
+            names |= sibling_names
+            aliasTuples |= sibling_aliasTuples
+    
         
-    return names_parent, parent_alias_tuples
+    return names, aliasTuples
     
     
 def get_kin_name(identifier, text, kinship):
@@ -454,10 +477,10 @@ def initialize_people(names, alias_tuples):
             upsert=True,
         )
 
-    for alias_tuple in alias_tuples:
-        alias_pair = {'type': alias_tuple[1], 'alias':alias_tuple[2]}
+    for (name, aliasType, alias) in alias_tuples:
+        alias_pair = (aliasType, alias)
         db.people.find_and_modify(
-            query={'Name':alias_tuple[0]},
+            query={'Name': name},
             update={'$push': {'Alias_s' : alias_pair}},
         )
 

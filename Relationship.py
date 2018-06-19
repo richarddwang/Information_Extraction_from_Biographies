@@ -1,7 +1,7 @@
 import re
 import os
 from stanfordcorenlp import StanfordCoreNLP
-nlp = StanfordCoreNLP('./Tools/stanford-corenlp-full-2018-02-27', lang='zh')
+nlp = None
 # Simplified and Traditional Chinese
 from opencc import OpenCC
 toTrad = OpenCC("s2t")
@@ -10,16 +10,17 @@ toSimp = OpenCC("t2s")
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
 db = client['Summary'] # access database "Summary"
-db.relations.remove() # remove data in collection if exist
 db['relations'] # create collection "cooccurrence" if not exist
 #
 from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
+from NER import KINSHIP_CHARS
 
 def main():
+    global nlp
+    nlp = StanfordCoreNLP('./Tools/stanford-corenlp-full-2018-02-27', lang='zh')
+    db.relations.remove() # remove data in collection if exist
     try:
-        print("kinshiping")
         update_kinships_to_db()
-        print("parallelling!!")
         parallelly_process(main_process, list(db.biographies.find()))
     finally:
         nlp.close()
@@ -27,14 +28,14 @@ def main():
 def update_kinships_to_db():
     for person in db.people.find():
         for (aliasType, alias) in person['Alias_s']:
-            if aliasType is "親屬關係暫存":
+            if aliasType == "親屬關係暫存":
                 biographee_name, kinship = alias.split(":")
                 db.relations.insert_one({
                     'ID1' : None,
                     'Name1' : biographee_name,
                     'Relation' : kinship,
                     'ID2' : None,
-                    'Name2' : name,
+                    'Name2' : person['Name'],
                 })
         
 def main_process(biographies):
@@ -48,6 +49,7 @@ def main_process(biographies):
             lines_have_name = extract_line(text, name)
             for line in lines_have_name:
                 relations.extend(relationship(line, biograpy['Name'], name))
+        relations = filterOut_kinship_relations(relations)
         output_relations_of_biography(relations, biograpy)
         total_relations += relations
                 
@@ -179,6 +181,23 @@ def build_dict(pos, depend):
             output[obj]["dependency"][depd] = subj
     return output    
 
+def filterOut_kinship_relations(relations):
+    filtered_relations = []
+    for relation in relations:
+        splits = relation.split()
+        if len(splits) != 3:
+            continue
+        name1, rel, name2 = splits
+        
+        notKinship = True
+        for kinship in KINSHIP_CHARS:
+            if kinship in rel:
+                notKinship = False
+        if notKinship:
+            filtered_relations.append("{} {} {}".format(name1, rel, name2))
+
+    return filtered_relations
+
 def output_relations_of_biography(relations, biography):
     try:
         os.makedirs('./DataBase/relation')
@@ -188,7 +207,7 @@ def output_relations_of_biography(relations, biography):
     for relationship in db.relations.find():
         if relationship['Name1'] == biography['Name']:
             relations.append( "{} {} {}".format(relationship['Name1'], relationship['Relation'], relationship['Name2']) )
-    
+
     with open('./DataBase/relation/{}-{}.txt'.format(biography['StartPage'], biography['Name']), mode='w', encoding='utf-8') as f:
         for relation in relations:
             relation = relation.split()
