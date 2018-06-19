@@ -6,6 +6,7 @@ from NER import main as ner
 from Cooccurrence import main as cooccurrence
 from Relationship import main as relation
 from Graph import main as generate_graphs
+from Get_timeline import main as get_chronologicalTable
 
 def main():
     print("Check tools and environments")
@@ -25,7 +26,9 @@ def main_process():
     print("Relation Analyzing")
     relation()
     print("Generating graphs")
-    generate_graphs()    
+    generate_graphs()
+    print("Generating chronologicalTable")
+    get_chronologicalTable()
 
 def check_tools_and_environemnts():
     print("Checking output directories exist")

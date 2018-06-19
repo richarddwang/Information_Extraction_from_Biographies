@@ -1,6 +1,18 @@
 import os
 import re
 import numpy as np
+#
+from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
+from nltk.parse.corenlp import CoreNLPDependencyParser
+dpsr = CoreNLPDependencyParser()
+# Simplified and Traditional Chinese
+from opencc import OpenCC
+toTrad = OpenCC("s2t")
+toSimp = OpenCC("t2s")
+# database
+from pymongo import MongoClient
+client = MongoClient('localhost', 27017) # create a connection to Mongodb
+db = client['Summary'] # access database "Summary"
 
 def get_timeline(text, concise_bool = False):
     positions_of_year = []
@@ -42,27 +54,23 @@ def get_timeline(text, concise_bool = False):
         timeline_dict[int(year)] = event_of_the_year #西元年為key（整數型，為了後續排序）,事件字串為value
     
     return timeline_dict
-    
+
 def remove_leading_comma(raw_eoty): #eoty: event of the year
     if raw_eoty[0] == '，':
         return raw_eoty[1:] #delete the leading comma
     return raw_eoty
 
 def dependency_parsing(some_string):
-    from nltk.parse.corenlp import CoreNLPDependencyParser
-    dpsr = CoreNLPDependencyParser()
-    from hanziconv import HanziConv #traditional chinese to simplified chinese
-
     list_desired_eoty = []
-    simplified_substring = HanziConv.toSimplified(some_string) 
+    simplified_substring = toSimp.convert(some_string) 
     for dependency in next(dpsr.raw_parse(simplified_substring)).triples():
         if dependency[1] in ['dobj', 'iobj']: #if is a certain type of desired dependency
-            desired_eoty = dependency[0][0] + dependency[2][0] 
-            desired_eoty = HanziConv.toTraditional(desired_eoty)
+            desired_eoty = dependency[0][0] + dependency[2][0] #(('接收', 'VV'), 'nsubj', ('政府', 'NN'))
+            desired_eoty = toTrad.convert(desired_eoty)
             list_desired_eoty.append(desired_eoty)
-        elif dependency[1] in ['nsubj','csubj']: #(('接收', 'VV'), 'nsubj', ('政府', 'NN'))
+        elif dependency[1] in ['nsubj','csubj']:
             desired_eoty = dependency[2][0] + dependency[0][0]
-            desired_eoty = HanziConv.toTraditional(desired_eoty)
+            desired_eoty = toTrad.convert(desired_eoty)
             list_desired_eoty.append(desired_eoty)
     return list_desired_eoty
 
@@ -88,21 +96,33 @@ def print_timeline(time_line_dict):
 def get_text_by_name(path, person_name):
     file_names = os.listdir(path)
     specific_file_name = list(filter(lambda x: person_name in x, file_names))[0]
-    f = open('/home/ac/coding/1062nlp/Summarize_People-master/DataBase/mature_txt/' + specific_file_name)
+    f = open('/home/.../Summarize_People-master/DataBase/mature_txt/' + specific_file_name)
     text = f.read()
     return text
 
+def output_chronologicalTable(biograpy, ordered_chronologicalTable, whetherConcise):
+    try:
+        os.makedirs('./DataBase/chronological-table')
+    except FileExistsError: # directory is exist
+        pass
+
+    with open('./DataBase/chronological-table/{}-{}{}'.format(biograpy['StartPage'], biograpy['Name'], "" if not whetherConcise else "_concise"), 'w', encoding='utf-8') as f:
+        print('\n#--------------------------------------------------#', file=f)
+        for key, value in ordered_chronologicalTable.items():
+            print(key, ':', value, file=f)
+        print('#--------------------------------------------------#\n', file=f)
 
 
+def main_process(biographies):
+    for biography in biographies:
+        text = get_biography_text(biography)
+        for whetherConcise in [False, True]:
+            chronologicalTable = get_timeline(text, concise_bool=whetherConcise)
+            ordered_chronologicalTable = sort_timeline_dict(chronologicalTable)
+            output_chronologicalTable(biography, ordered_chronologicalTable, whetherConcise)
 
 def main():
-    path = '/home/ac/coding/1062nlp/Summarize_People-master/DataBase/mature_txt/'
-    person_name = input('Please input the name: ')
-    flag = input('Concise Summary? (y/n):')
-    concise_bool = True if flag=='y' else False
-    text = get_text_by_name(path, person_name)
-    timeline_dict = get_timeline(text, concise_bool=concise_bool)
-    timeline_ordered_dict = sort_timeline_dict(timeline_dict)
-    print_timeline(timeline_ordered_dict)
+    parallelly_process(main_process, list(db.biographies.find()))
 
-main()
+if __name__ == '__main__':    
+    main()
