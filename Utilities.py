@@ -56,6 +56,8 @@ def get_people_in_text_within_people(text, within_people, repeatOK=False):
             in_text_people.append(person)
         #    
         for (aliasType, aliasName) in person['Alias_s']:
+            if aliasType is "親屬關係暫存":
+                break
             if get and not repeatOK:
                 break
             elif text.find(aliasName) is not -1:

@@ -36,24 +36,22 @@ with open('./Tools/Mainland-Place-Names.json', 'r', encoding='utf-8') as f:
 # elements in the same list may have only one
 # by length : the fronter in re | the prefer
 GIRL_ORDER_CHILD = ["長女", "次女", "三女", "四女", "五女", "六女", "七女", "八女", "九女", "十女", "么女", "幼女", "獨女"]
-BOY_ORDER_CHILD = ["長子", "次子", "三子", "四子", "伍子", "五子", "六子", "七子", "八子", "九子", "十子", "么子", "么兒", "幼子", "獨子"]
-GRAND_CHILD_ORDER = ["長孫", "次孫",]
+BOY_ORDER_CHILD = ["長子", "次子", "三子", "四子", "伍子", "五子", "六子", "七子", "八子", "九子", "十子", "么子", "么兒", "幼子", "獨子", "長男", "次男", "三男", "四男", "伍男", "五男", "六男", "七男", "八男", "九男", "十男", "么男",]
 GIRL_CHILD_CHARS = ["女兒", "女",]
 BOY_CHILD_CHARS = ["兒子", "子", "兒",]
-CONTINUOUS_CHARS1 = ["，", ":", "。"]
-CONTINUOUS_CHARS2 = ["依序", "依次", "分別", ""]
-CONTINUOUS_CHARS3 = ["為", "是", ""]
-CONTINUOUS_CHARS4 = [":", ""]
-CONTINUOUS_CHILD_CHARS = list(map(lambda tple: "".join(tple),
-                                  list(product(
-                                      GIRL_CHILD_CHARS + BOY_CHILD_CHARS, CONTINUOUS_CHARS1, CONTINUOUS_CHARS2, CONTINUOUS_CHARS3, CONTINUOUS_CHARS4)))) 
-GRAND_CHILD_CHARS = ["孫子", "孫",]
-OTHER_CHILD_CHARS = ["乾女兒", "乾兒子", "乾孫子", ]
+#
 MAN_PARENT_CHARS = ["父親", '父', "爹", "爸",]
 WOMAN_PARENT_CHARS = ["母親", '母', "娘", "媽",]
 OTHER_PARENT_CHARS = ["乾爸", "乾媽", "乾爹", "乾娘", "繼父", "繼母", '祖父', '祖母',]
-MAN_SPOUSE_CHARS = ["丈夫為", "丈夫", "夫為" , "夫"]
+SMALL_BROTHER_ORDER = ["大弟", "二弟", "三弟"]
+SMALL_BROTHER_CHARS = ["弟弟", "弟"]
+BIG_BROTHER_ORDER = [""]
 WOMAN_SPOUSE_CHARS = ["妻為", "妻過", "妻子", "娶", "妻"]
+MAN_SPOUSE_CHARS = ["丈夫為", "丈夫", "夫為" , "夫"]
+OTHER_CHILD_CHARS = ["乾女兒", "乾兒子", "乾孫子", ]
+GRAND_CHILD_ORDER = ["長孫", "次孫",]
+GRAND_CHILD_CHARS = ["孫子", "孫"]
+
 KINSHIP_CHARS = GIRL_ORDER_CHILD + BOY_ORDER_CHILD + GRAND_CHILD_ORDER + GIRL_CHILD_CHARS + BOY_CHILD_CHARS + GRAND_CHILD_CHARS + MAN_PARENT_CHARS + WOMAN_PARENT_CHARS + OTHER_PARENT_CHARS + MAN_SPOUSE_CHARS + WOMAN_SPOUSE_CHARS
 
 
@@ -68,8 +66,7 @@ def main():
         initialize_people(names, alias_tuples)
         
     finally:  # whether any error occur in main, we need to shut down server to save memory 
-        pass
-        #nlp.close()
+        nlp.close()
 
 def extract_names_from_biograpies(biographies):
     total_names = set()
@@ -95,7 +92,10 @@ def extract_names_from_biograpy(text, biography):
 
     eng_alias_tuples = get_englishNames(text, names)
     other_alias_tuples = get_otherNames(text, biography['Name'])
-    alias_tuples = eng_alias_tuples | other_alias_tuples  | kinship_alias_tuples # set union
+    alias_tuples = set()
+    for (name, aliasType, alias) in (eng_alias_tuples | other_alias_tuples  | kinship_alias_tuples):
+        if name in names:
+            alias_tuples.add( (name, aliasType, alias) )
 
     output_ner_result_for_check(biography, names, alias_tuples, names_jieba, names_stanford)
     
@@ -162,7 +162,7 @@ def get_kin_name(identifier, text, kinship):
         return set(), set()
     if len(name_candidate) > 4:
         first_word, tag = list(jieba.posseg.cut(name_candidate))[0]
-        if tag.startswith("n"):
+        if tag.startswith("n"): # len filter
             name = first_word
         else:
             return set(), set()
@@ -227,9 +227,6 @@ def get_names_child_and_spouse(text, biographee_name):
         girl_child_names |= girl_order_child_names
         girl_child_alias_tuples |= girl_order_child_alias_tuples
 
-    if len(girl_child_names) == 0:
-        girl_child_names, girl_child_alias_tuples = get_kin_name("|".join(GIRL_CHILD_CHARS), paragraph, "女兒")
-
     #
     boy_child_names = set()
     boy_child_alias_tuples = set()
@@ -237,9 +234,6 @@ def get_names_child_and_spouse(text, biographee_name):
         boy_order_child_names, boy_order_child_alias_tuples = get_kin_name(boy_order_child, paragraph, "兒子")
         boy_child_names |= boy_order_child_names
         boy_child_alias_tuples |= boy_order_child_alias_tuples
-
-    if len(boy_child_names) == 0:
-        boy_child_names, boy_child_alias_tuples = get_kin_name("|".join(BOY_CHILD_CHARS), paragraph, "兒子")
 
     # Continuous
     # if Continuous, there must be yu you
@@ -266,7 +260,7 @@ def get_names_child_and_spouse(text, biographee_name):
     continuous_child_names = set()
     continuous_child_alias_tuples = set()
     if notFound_kinship is not None:
-        continuous_child_names, continuous_child_alias_tuples = get_continuous_child_names(CONTINUOUS_CHILD_CHARS, paragraph, notFound_kinship)
+        continuous_child_names, continuous_child_alias_tuples = get_continuous_child_names(paragraph, notFound_kinship)
 
     #
     child_names = girl_child_names | boy_child_names | continuous_child_names
@@ -277,27 +271,50 @@ def get_names_child_and_spouse(text, biographee_name):
 
     return (child_names | man_spouse_names | woman_spouse_names), (child_alias_tuples | man_spouse_alias_tuples | woman_spouse_alias_tuples)
         
-def get_continuous_child_names(continuous_chars, text, kinship):
-    match = re.search(r'({})(([^\W\d_]|[）（ 、])+)'.format( "|".join(continuous_chars) ), text) # [^\W\d_] : \w - \d
+def get_continuous_child_names(text, kinship):
+    match = re.search(r'育有?(\d子)?(\d女)?(.*?)(。|，)', text)
     if match is None:
         return set(), set()
-    
-    child_names = set()
-    child_alias_tuples = set()
-    for child_name_candidate in match[2].split("、"):
-        match2 = re.search(r'（(.+?)）', child_name_candidate)
-        if match2 is None: 
-            child_names.add(child_name_candidate)
-        elif re.match(r'[a-zA-Z ]+', match2[1]): # assume if have english name, we don't need to preprent family name
-            child_name_candidate = "💗" + child_name_candidate[:match2.start()]  # 防止被冠名
-            child_names.add(child_name_candidate)
-            child_eng_name = match2[1]
-            child_alias_tuples.add( (child_name_candidate, "英文名", child_eng_name) )
-        else: # ling yu biograpy
-            child_names.add(child_name_candidate[:match2.start()])
-    child_alias_tuples |= set(map(lambda name: (name, kinship, None), child_names))
 
-    return child_names, child_alias_tuples
+    if match[3] is not "":
+        unchecked_names = match[3].split("、")
+    else:
+        match2 = re.search(r'(.+?)(。|，)', text[match.end():])
+        if match2 is None:
+            return set(), set()
+        match3 = re.search(r'(為|是)(：|：)?(.+)', match2[1])
+        if match3 is not None:
+            unchecked_names = match3[3].split("、")
+        else:
+            unchecked_names = match2[1].split("、")
+
+    names = set()
+    alias_tuples = set()
+    for unchecked_name in unchecked_names:
+        #
+        if unchecked_name.startswith("子"):
+            kinship = "兒子"
+            unchecked_name = unchecked_name[1:]
+        elif unchecked_name.startswith("女"):
+            kinship = "女兒"
+            unchecked_name = unchecked_name[1:]
+        else:
+            pass
+        # 
+        detectParen_match = re.search(r'(.+)（(.+?)）', unchecked_name)
+        if detectParen_match is not None:
+            eng_match = re.match(r'[a-zA-Z ]+', detectParen_match[2])
+            if eng_match is not None:
+                unchecked_name = "💗" + detectParen_match[1] # assume if have english name, we don't need to preprent family name
+                english_name = eng_match[0]
+                alias_tuples.add( (unchecked_name, "英文名", english_name) )
+            else:
+                unchecked_name = detectParen_match[1]
+
+        names.add(unchecked_name)
+        alias_tuples.add( (unchecked_name, kinship, None) )            
+
+    return names, alias_tuples
 
 def prepend_family_name_to_childs(names_or_aliasTuples, family_name):
     if family_name is None:
@@ -334,7 +351,7 @@ def process_and_filter_names(names):
     for name in names:
         
         # filter
-        if(len(name) > 1 # 名字至少兩個字
+        if( 1 < len(name) <= 4 # 名字至少兩個字
            and name[-1]!='寺' # 篩掉部分標注錯誤的情
            and name not in ["田野", "伯父", "伯母", "元配", "高中生"] 
            and re.match('[a-zA-Z]',name) == None
@@ -358,7 +375,7 @@ def process_and_filter_names(names):
         if not_substr_of_any:
             second_processed_names.add(name1)
                 
-    return second_processed_names
+    return second_processed_names 
 
 def get_englishNames(text, names):
     engName_tuples = set()

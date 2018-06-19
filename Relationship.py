@@ -17,10 +17,26 @@ from Utilities import parallelly_process, get_biography_text, get_people_in_text
 
 def main():
     try:
+        print("kinshiping")
+        update_kinships_to_db()
+        print("parallelling!!")
         parallelly_process(main_process, list(db.biographies.find()))
     finally:
         nlp.close()
-    
+
+def update_kinships_to_db():
+    for person in db.people.find():
+        for (aliasType, alias) in person['Alias_s']:
+            if aliasType is "親屬關係暫存":
+                biographee_name, kinship = alias.split(":")
+                db.relations.insert_one({
+                    'ID1' : None,
+                    'Name1' : biographee_name,
+                    'Relation' : kinship,
+                    'ID2' : None,
+                    'Name2' : name,
+                })
+        
 def main_process(biographies):
     total_relations = []
     for biograpy in biographies:
@@ -169,6 +185,10 @@ def output_relations_of_biography(relations, biography):
     except FileExistsError: # directory is exist
         pass
 
+    for relationship in db.relations.find():
+        if relationship['Name1'] == biography['Name']:
+            relations.append( "{} {} {}".format(relationship['Name1'], relationship['Relation'], relationship['Name2']) )
+    
     with open('./DataBase/relation/{}-{}.txt'.format(biography['StartPage'], biography['Name']), mode='w', encoding='utf-8') as f:
         for relation in relations:
             relation = relation.split()

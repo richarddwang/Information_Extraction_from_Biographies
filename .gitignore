@@ -10,6 +10,7 @@
 /Tools/ECDICT/__pycache/*
 /Tools/stanford-corenlp-full-2018-02-27/*
 *.pyc
+.#*
 /__pycache__/*
 
 !/DataBase/README.md
