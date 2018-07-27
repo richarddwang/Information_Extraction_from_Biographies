@@ -37,6 +37,7 @@ def check_tools_and_environemnts():
     makedirs_if_not_exist('./DataBase/mature_txt')
     makedirs_if_not_exist('./DataBase/ner_result')
     makedirs_if_not_exist('./DataBase/relation')
+    makedirs_if_not_exist('./DataBase/cooccurrence')
     makedirs_if_not_exist('./DataBase/chronological-table')
     
     

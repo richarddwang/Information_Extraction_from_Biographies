@@ -23,8 +23,9 @@ def main_process(biographies):
         people = get_people_in_text_within_people(text, db.people.find())
         indexed_people = tag_people_index_in_text(people, text)
         pair_distances = count_cooccurence_distance(indexed_people)
-        pair_distances +=  set_cooccurrence_to_biographee(people, biograpy['Name']) 
+        pair_distances +=  set_cooccurrence_to_biographee(people, biograpy['Name'])
         pair_scores = count_coccurrence_score(pair_distances)
+        output_scores_in_biography(pair_scores, biograpy)
         update_scores_to_db(pair_scores)
         
 def tag_people_index_in_text(total_people, text):
@@ -77,24 +78,31 @@ def count_coccurrence_score(pair_distances):
     pair_scores = []
     pair = None
     for tpl in pair_distances:
-        if (tpl.person, tpl.other) is not pair:
+        if (tpl.person, tpl.other) != pair:
             pair = (tpl.person, tpl.other)
             depre = DEPRECIATE_FACTOR
             pair_scores.append(PairValue(tpl.person, tpl.other, DISTANCE2SCORE_FACTOR / tpl.value))
         else:
             pair_score = pair_scores[-1]
-            pair_scores[-1] = PairValue(tpl.person, tpl.other, pair_score + tpl.value * depre)
+            pair_scores[-1] = PairValue(tpl.person, tpl.other, pair_score.value + DISTANCE2SCORE_FACTOR / tpl.value * depre)
             depre **= 2
             
     return pair_scores
 
+def output_scores_in_biography(pair_scores, biograpy):
+    with open('./DataBase/cooccurrence/{}-{}-{}.txt'.format(biograpy['Book'], biograpy['StartPage'], biograpy['Name']) , 'w', encoding='utf-8') as f:
+        for pair_score in sorted(pair_scores, key=lambda x: x.value, reverse=True):
+            if pair_score.person != pair_score.other:
+                print(pair_score.person, round(pair_score.value, 2), pair_score.other, file=f)
+
 def update_scores_to_db(pair_scores):
     for pair_score in pair_scores:
-        db.cooccurrences.insert_one(
-            {'Name1':pair_score.person,
-             'Name2':pair_score.other,
-             'Score':pair_score.value,}
-        )
+        if pair_score.person != pair_score.other:
+            db.cooccurrences.insert_one(
+                {'Name1':pair_score.person,
+                 'Name2':pair_score.other,
+                 'Score':pair_score.value,}
+            )
 
 if __name__ == '__main__':
     main()

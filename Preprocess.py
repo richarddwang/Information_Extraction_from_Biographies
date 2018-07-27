@@ -10,15 +10,16 @@ client = MongoClient('localhost', 27017) # create a connection to Mongodb
 db = client['Summary'] # access database "Summary"
 
 def main():
-    # normalize傳記文本，並同時存一些傳記資訊
+    # 將傳記文本變乾淨，並同時存一些傳記資訊
     for biography in db.biographies.find():
         process_biograpy(biography)
         
 def process_biograpy(biography):
     name = biography["Name"]
     startPage = biography["StartPage"]
+    book = biography["Book"]
 
-    with open('./DataBase/raw_txt/{}-{}.txt'.format(startPage, name), 'r', encoding='utf-8') as f:
+    with open('./DataBase/raw_txt/{}-{}-{}.txt'.format(book, startPage, name), 'r', encoding='utf-8') as f:
         text = f.read()
 
     # 文本整體的處理，並找出附註的小數字們
@@ -48,7 +49,7 @@ def process_biograpy(biography):
     content = process_content(content, biography, footnote_indices)
 
     # Output
-    output_mature_txt(startPage, name, content)
+    output_mature_txt(book, startPage, name, content)
         
     db.biographies.save(biography) # save into collection and replace the document with the same "_id" (original document)
 
@@ -69,7 +70,7 @@ def distinguish_footnote(text):
     content_part_s = [] # 各頁的內文部分
     footnote_part_s = [] # 各頁的附註部分
     for page in page_s:
-        cut_at = math.inf # 內文和附註的切割點
+        cut_at = math.inf # 此頁內文和附註的切割點
 
         # 利用附註小數字的格式找出本頁第一條附註位置
         match = re.search(r'^\d+ ', page , flags=re.MULTILINE)
@@ -78,12 +79,14 @@ def distinguish_footnote(text):
             cut_at = mStart
 
         # 一條附註可能被斷到兩頁，則下一頁的附註一開始就是上一頁的附註的接續，沒有附註小數字
-        # 看附註結尾來辨識出在下一頁開頭的接續的附註(不是完全可靠)
+        # 看附註結尾(通常註解以"頁XX", "第X版"等等來結尾)來辨識出在下一頁開頭的接續的附註(不是完全可靠)
         match = re.search(r'^.+，(頁[\d\- ]+|第[\d\- ]+版)。$',page ,flags=re.MULTILINE)
         if match:
-            mStart, mEnd = match.span()
+            mStart, mEnd = match.span() 
+            # 從上頁開始但被被切到下頁的附註的開頭，用附註尾才能找到，但如果沒有這樣的附註，就可能找到一條附註的第2行
             cut_at = min(mStart, cut_at)
 
+        # 如果有找到切割點，就切開成此頁的內文和附註
         if cut_at is not math.inf:
             content_part = page[:cut_at]
             footnote_part = page[cut_at:]
@@ -98,8 +101,11 @@ def distinguish_footnote(text):
     return content_text, footnote_text
 
 def remove_footnoteNumber(content, name, footnote_indices):
+    #
+    if len(footnote_indices)==0: return content
+    
     # 第一種附註小數字出現的場合
-    content = re.sub(name+' ?'+str(footnote_indices[0])+' ?（', "{}（".format(name),content , 1)
+    content = re.sub(name+' ?'+str(footnote_indices[0])+' ?（', "{}（".format(name),content , 1) # 1 what?
     # 第二種附註小數字出現的場合
     for index in footnote_indices[1:]:  
         content = re.sub("([。，])" + index, r'\g<1>', content, count=1)
@@ -115,6 +121,7 @@ def remove_unneedSpace(text):
 
     return text
 
+# 將段落明顯地分開
 def paragraph_clarify(text):
     # 因為句號後面換行的通常是一段落的結尾(但也可能不是)
     text = text.replace("。\n", "Å")
@@ -123,7 +130,11 @@ def paragraph_clarify(text):
 
     return text
 
+# 將附註分成一條一條，每條附註的開頭數字也分開
 def process_footnote(footnote, biography):
+    #
+    if len(footnote)==0: return
+    
     footnote = footnote[:-2] # 去掉最後的兩個newline
     f_lines = footnote.split('\n\n') # 這樣最後就不會多一個空的split，各條附註分開
     # There may be footnot line without numbering, see pdf 194,195
@@ -135,8 +146,11 @@ def process_footnote(footnote, biography):
             insert_pos += 1
         else:
             biography['Footnotes'][insert_pos-1]['FootnoteText'] += ("\n" + f_line)
-            
+
+
 def process_content(content, biography, footnote_indices):
+    if len(footnote_indices)==0: return content #
+    
     name = biography["Name"]    
 
     # 從內文去掉傳記撰者，並保存在傳記資訊
@@ -146,7 +160,7 @@ def process_content(content, biography, footnote_indices):
     content = content.replace(author_line, "")
 
     # 從內文去掉傳記標題，保存別名， 生日日期，死亡日期
-    reg = name + "（(.+，)?([\d?.]*)-([\d?.]*)）"
+    reg = name + "（(.+，)?([\d?.？]*)-([\d?.？]*)）"
     title = re.search(reg, content, flags=re.MULTILINE)
     if len(title.groups()) == 2:
         biography["Birth"] = title[1] # group1
@@ -159,13 +173,15 @@ def process_content(content, biography, footnote_indices):
     
     return content
 
-def output_mature_txt(startPage, name, content):
+def output_mature_txt(book, startPage, name, content):
+    # 如果沒有輸出目的地資料夾，則建立一個
     try:
         os.makedirs('./DataBase/mature_txt')
     except FileExistsError: # directory is exist
         pass
-    
-    with open('./DataBase/mature_txt/{}-{}.txt'.format(startPage, name), 'w', encoding='utf-8') as f:
+
+    # 輸出到該資料夾
+    with open('./DataBase/mature_txt/{}-{}-{}.txt'.format(book, startPage, name), 'w', encoding='utf-8') as f:
         f.write(content)
 
 if __name__ == "__main__":

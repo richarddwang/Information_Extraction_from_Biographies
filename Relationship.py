@@ -1,7 +1,7 @@
 import re
 import os
-from stanfordcorenlp import StanfordCoreNLP
-nlp = None
+from pycorenlp import StanfordCoreNLP
+nlp = StanfordCoreNLP('http://localhost:9000')
 # Simplified and Traditional Chinese
 from opencc import OpenCC
 toTrad = OpenCC("s2t")
@@ -13,17 +13,12 @@ db = client['Summary'] # access database "Summary"
 db['relations'] # create collection "cooccurrence" if not exist
 #
 from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
-from NER import KINSHIP_CHARS
+from NER import KINSHIP_CHARS #
 
 def main():
-    global nlp
-    nlp = StanfordCoreNLP('./Tools/stanford-corenlp-full-2018-02-27', lang='zh')
     db.relations.remove() # remove data in collection if exist
-    try:
-        update_kinships_to_db()
-        parallelly_process(main_process, list(db.biographies.find()))
-    finally:
-        nlp.close()
+    update_kinships_to_db()
+    parallelly_process(main_process, list(db.biographies.find()))
 
 def update_kinships_to_db():
     for person in db.people.find():
@@ -88,9 +83,7 @@ def relationship(text, main_char, obj):
     text = toSimp.convert(text)
     main_char = toSimp.convert(main_char)
     obj = toSimp.convert(obj)
-    pos = nlp.pos_tag(text)
-    dep = nlp.dependency_parse(text)
-    dep_dict = build_dict(pos, dep)
+    dep_dict = build_dict(text)
     verb_output = []
     nn_output = []
     if obj in dep_dict.keys():
@@ -151,35 +144,24 @@ def relationship(text, main_char, obj):
     else:
         return "there has no relationships" ## be treated as list when extend the reture value of this func
 
-def build_dict(pos, depend):
-    """
-    depend為nlp.dependency_parse()的output
-    [('ROOT', 0, 8),
-     ('case', 5, 1),
-     ('nmod:assmod', 3, 2),
-     ('dep', 5, 3),
-     ('compound:nn', 5, 4),
-     ('nmod:prep', 6, 5),
-     ('nsubj', 8, 6),
-     ('advmod', 8, 7),
-     ('dobj', 8, 9)]
-    除了ROOT那個tuple以外，其餘tuple裡面的數字都是句中的第幾個詞（initial=1）
-    
-    """
-    output = {}
-    word_list = []
-    for t in pos:
-        word = t[0]
-        p = t[1]
-        output[word] = {"pos":p, "dependency":{}}
-        word_list.append(word)
-    for t in depend:
-        depd = t[0] # dependency
-        if depd != "ROOT":
-            obj = word_list[t[1]-1] # 依賴者
-            subj = word_list[t[2]-1] # 被依賴者
-            output[obj]["dependency"][depd] = subj
-    return output    
+def build_dict(text):
+    result = dict()
+    output = nlp.annotate(text, properties={
+    'annotators': "tokenize, ssplit, pos, depparse",
+    'outputFormat': 'json',
+    })
+    for sent in output['sentences']:
+        for token in sent['tokens']:
+            word = token['word']
+            result[word] = {"pos": token['pos'], "dependency": {} }
+        for dependency in sent['basicDependencies']:
+            label = dependency['dep']
+            if label != 'ROOT':
+               parent_word = dependency['governorGloss']
+               child_word = dependency['dependentGloss']
+               result[parent_word]['dependency'][label] = child_word
+               
+    return result
 
 def filter_relations(relations):
     filtered_relations = []
@@ -216,7 +198,7 @@ def output_relations_of_biography(relations, biography):
         if relationship['Name1'] == biography['Name']:
             relations.append( "{} {} {}".format(relationship['Name1'], relationship['Relation'], relationship['Name2']) )
 
-    with open('./DataBase/relation/{}-{}.txt'.format(biography['StartPage'], biography['Name']), mode='w', encoding='utf-8') as f:
+    with open('./DataBase/relation/{}-{}-{}.txt'.format(biography['Book'], biography['StartPage'], biography['Name']), mode='w', encoding='utf-8') as f:
         for relation in relations:
             relation = relation.split()
             if isinstance(relation, list) and len(relation)==3:
@@ -238,10 +220,4 @@ def update_relations_to_db(relations):
             )
 
 if __name__=='__main__':
-    main()
-    
-    # try:
-    #     main_process(list(db.biographies.find(filter={'Name':"王世慶"})))
-    # finally:
-    #     nlp.close()
-    
+    main()    

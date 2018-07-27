@@ -1,10 +1,9 @@
 /DataBase/tmp/*
 /DataBase/raw_txt/*
 /DataBase/mature_txt/*
-/DataBase/metaData/*
-/DataBase/token/*
 /DataBase/ner_result/*
 /DataBase/relation/*
+/DataBase/cooccurrence/*
 /DataBase/chronological-table/*
 /Tools/ECDICT/ecdict_sqlite
 /Tools/ECDICT/__pycache/*

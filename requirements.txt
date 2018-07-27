@@ -1,6 +1,6 @@
 pymongo
 jieba
-stanfordcorenlp
+pycorenlp
 opencc-python-reimplemented
 nltk
 networkx

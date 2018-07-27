@@ -42,7 +42,7 @@ class ThreadWithReturnValue(Thread):
         return self._return
 
 def get_biography_text(biography):
-    with open('./DataBase/mature_txt/{}-{}.txt'.format(biography['StartPage'], biography['Name']),'r' ,encoding='utf-8', ) as f:
+    with open('./DataBase/mature_txt/{}-{}-{}.txt'.format(biography['Book'], biography['StartPage'], biography['Name']),'r' ,encoding='utf-8', ) as f:
         text = f.read()
     return text
 

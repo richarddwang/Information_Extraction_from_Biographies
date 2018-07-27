@@ -3,13 +3,13 @@ import re
 import subprocess
 
 def extract_appendix():
-    command = 'java -jar ../pdfbox-app-1.8.13.jar ExtractText -encoding utf-8 -startPage 383 -endPage 412 ../../DataBase/社會與文化篇.pdf ../../tmp/names_appendix.txt'
+    command = 'java -jar ../pdfbox-app-1.8.13.jar ExtractText -encoding utf-8 -startPage 383 -endPage 412 ../../DataBase/社會與文化篇.pdf ../../DataBase/tmp/names_appendix.txt'
     subprocess.run(command.split() )
 
 
 def split_text():
     title = []
-    with open ('../../tmp/names_appendix.txt', 'r', encoding='utf-8') as f:
+    with open ('../../DataBase/tmp/names_appendix.txt', 'r', encoding='utf-8') as f:
         text = f.read()
         text = re.sub(r"\d \d \d\n|附錄　人物表\n|臺北市醫院名 院（所）長\n","", text)
     pattern = re.compile("[一二三四五六七八九]、.+一覽")

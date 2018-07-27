@@ -3,7 +3,7 @@ import os
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017) # create a connection to Mongodb
 db = client['Summary'] # access database "Summary"
-COOCCURRENCE_ZOOM_FACTOR = 1.2
+COOCCURRENCE_ZOOM_FACTOR = 0.6
 
 def insert_all_people_as_nodes(G):
     for person in db.people.find():
@@ -36,6 +36,7 @@ def generate_relationGraph():
 
     # Output
     nx.write_graphml(DG, "./DataBase/graph/relation_network.graphml", )
+    #nx.write_pajek(DG, "./DataBase/graph/relation_network.net", encoding='UTF-8')
 
 def main():
     try:

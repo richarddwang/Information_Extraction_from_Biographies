@@ -106,7 +106,7 @@ def output_chronologicalTable(biograpy, ordered_chronologicalTable, whetherConci
     except FileExistsError: # directory is exist
         pass
 
-    with open('./DataBase/chronological-table/{}-{}{}'.format(biograpy['StartPage'], biograpy['Name'], "" if not whetherConcise else "_concise"), 'w', encoding='utf-8') as f:
+    with open('./DataBase/chronological-table/{}-{}-{}{}.txt'.format(biograpy['Book'], biograpy['StartPage'], biograpy['Name'], "" if not whetherConcise else "_concise"), 'w', encoding='utf-8') as f:
         print('\n#--------------------------------------------------#', file=f)
         for key, value in ordered_chronologicalTable.items():
             print(key, ':', value, file=f)
