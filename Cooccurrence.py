@@ -1,3 +1,5 @@
+import re
+import sys
 from collections import namedtuple
 PairValue = namedtuple('PairValue', ['person', 'other', 'value'])
 from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
@@ -7,8 +9,8 @@ client = MongoClient('localhost', 27017) # create a connection to Mongodb
 db = client['Summary'] # access database "Summary"
 db['cooccurrences'] # create collection "cooccurrence" if not exist
 # Global variables
-DELEMITERS = ["，", "。", "\n\n"]
-INCREASEMENT = [1, 2, 3]
+DELEMITERS = ["，", "。", "。\n\n"] # order important
+INCREASEMENT = [1, 2, 3] # order correspond to DELEMITERS
 DISTANCE2SCORE_FACTOR = 4
 DEPRECIATE_FACTOR = 0.65
 DISTANCE_TO_BIOGRAPHEE = 2
@@ -33,22 +35,27 @@ def tag_people_index_in_text(total_people, text):
     pos = 1
     left_most_split, delimiter, rest_text = one_split_by_any_delimiter(text, DELEMITERS)
     while left_most_split is not None:
-         people = get_people_in_text_within_people(left_most_split, total_people, repeatOK=True)
-         indexed_people = list(zip( [pos] * len(people), people))
-         #
-         if indexed_people: # if not empty
-             total_indexed_people += indexed_people
-         pos += INCREASEMENT[DELEMITERS.index(delimiter)]
-         left_most_split, delimiter, rest_text = one_split_by_any_delimiter(rest_text, DELEMITERS)
+        people = get_people_in_text_within_people(left_most_split, total_people, repeatOK=True)
+        indexed_people = list(zip( [pos] * len(people), people))
+        #
+        if indexed_people: # if not empty
+            total_indexed_people += indexed_people
+        pos += INCREASEMENT[DELEMITERS.index(delimiter)]
+        left_most_split, delimiter, rest_text = one_split_by_any_delimiter(rest_text, DELEMITERS)
          
     return total_indexed_people
         
 
 def one_split_by_any_delimiter(text, delimiters):
-    for (i, char) in enumerate(text):
-        if char in delimiters:
-            return (text[:i], char, text[i+1:len(text)-1])
-    return (None, None, text)
+    regex_ORGroup = '|'.join(DELEMITERS)
+    regex = r'({})\w'.format(regex_ORGroup)
+    match = re.search(regex, text)
+    if match is None :
+        return (None, None, text)
+    else:
+        delimiter = match[1] #
+        delimeter_startPos, rest_StartPos = match.span(1) #
+        return (text[:delimeter_startPos], delimiter, text[rest_StartPos:sys.maxsize]) #        
 
 def count_cooccurence_distance(indexed_people):
     pair_distances = []
