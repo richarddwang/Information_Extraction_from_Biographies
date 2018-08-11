@@ -1,5 +1,17 @@
 # Information_Extraction_from_Biographies
-An exploration on NLP methods for information extraction from biographies, with *Extended Taipei Gazetteers*.
+An exploration on NLP methods for information extraction from biographies, with *Extended Taipei Gazetteers*.  
+  
+[Overview](#overview)  
+[Name Entity Recognition](#1pre%20requisite)  
+[Usage](#usage)  
+[Wiki]()  
+
+# Overview
+We propose and implement some new NLP methods for information extraction.
+## 1. Name Entity Recognition (NER)
+## 2. Relation Extraction
+## 3. Weighted Cooccurrence Rank
+## 4. Automatically Timeline Generation
 
 # Usage
 ## Prerequisite
@@ -9,6 +21,7 @@ An exploration on NLP methods for information extraction from biographies, with 
 4. [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/download.html)  
   download main program and unzip it somewhere  
   download Chinese model jar and move into the Stanford CoreNLP direcotry you just unzipped.
+  
 ## Execution
 1. Start MongoDB daemon.  
   `sudo service mongod start` (in Ubuntu)
