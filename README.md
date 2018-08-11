@@ -1,15 +1,15 @@
 # Information_Extraction_from_Biographies
 An exploration on NLP methods for information extraction from biographies, with *Extended Taipei Gazetteers*.  
   
-[Proposed NLP methods Overview](#proposed-nlp-methods-overview)  
+[Proposed NLP Methods Overview](#proposed-nlp-methods-overview)  
 &nbsp;&nbsp;&nbsp;[1. Name Entity Recognition](#1-name-entity-recognition-ner)  
 &nbsp;&nbsp;&nbsp;[2. Relation Extraction](#2-relation-extraction)  
 &nbsp;&nbsp;&nbsp;[3. Weighted Cooccurrence Rank](3-weighted-cooccurrence-rank)  
 &nbsp;&nbsp;&nbsp;[4. Automatically Timeline Generation](4-automatically-timeline-generation)  
 [Usage](#usage)  
-[Wiki]()  
+[Github Wiki](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki)
 
-# Proposed NLP methods Overview
+# Proposed NLP Methods Overview
 We propose and implement some new NLP methods for information extraction.
 ## 1. Name Entity Recognition (NER)
 ## 2. Relation Extraction
