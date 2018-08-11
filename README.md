@@ -17,4 +17,5 @@ An exploration on NLP methods for information extraction from biographies, with 
 3. Execute main pipeline process, and wait for several minutes.  
   `python3 main.py`
 4. Results are in `./Database`  
+  some results are also kept in MongoDB. (see Wiki:Data)
   note that graph result is store in `.graphml` format, you can import it to [Gephi](https://gephi.org/) or [Cytoscape](http://www.cytoscape.org/) or whatever you like
