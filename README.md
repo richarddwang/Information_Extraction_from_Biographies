@@ -5,7 +5,7 @@ An exploration on NLP methods for information extraction from biographies, with 
 &nbsp;&nbsp;&nbsp;[1. Name Entity Recognition](#1-name-entity-recognition-ner)  
 &nbsp;&nbsp;&nbsp;[2. Relation Extraction](#2-relation-extraction)  
 &nbsp;&nbsp;&nbsp;[3. Weighted Cooccurrence Rank](3-weighted-cooccurrence-rank)  
-&nbsp;&nbsp;&nbsp;[4. Automatically Timeline Generation](4-automatically-timeline-generation)  
+&nbsp;&nbsp;&nbsp;[4. Automatic Timeline Generation](4-automatic-timeline-generation)  
 [Usage](#usage)  
 [Github Wiki for more](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki)
 
@@ -37,12 +37,12 @@ Calculate and rank cooccurrence score which is weighted on distance, delimiters 
   
 [(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Weighted-Cooccurrence-Rank)
 
-## 4. Automatical Timeline Generation
+## 4. Automatic Timeline Generation
 Generate complete timeline using delimiter and some principles, or generate simple timeline using grammar structure.  
   
 ![ptimeline generation](Explanation-Material/proposed_timeline_generation_method_overview.png)
   
-[(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Automatical-Timeline-Generation)
+[(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Automatic-Timeline-Generation)
 
 # Usage
 ## Prerequisite
