@@ -14,7 +14,7 @@ We propose and implement some new NLP methods for information extraction.
 ## 1. Name Entity Recognition (NER)
 Increase recall by using multiple NER tools with auxiliary information, then increase precision by applying some filters and principles.  
   
-![diagram of proposed NER method](Explanation-Material/proposed-NER-method-overview.png)
+![diagram of proposed NER method](Explanation-Material/NER_method_overview.png)
   
 [(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Name-Entity-Recognition-(NER))
 
@@ -33,16 +33,16 @@ Take biography of "王世慶" for example (under the assumption that we detect c
 ## 3. Weighted Cooccurrence Rank
 Calculate and rank cooccurrence score which is weighted on distance, delimiters and times between names, to find out really important cooccurence and unfound relations.  
   
-![wieghted cooccurrence](Explanation-Material/proposed_weighted_cooccurrence_rank_method_overview.png)
+![wieghted cooccurrence](Explanation-Material/cooccurrence_formula.png)
   
 [(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Weighted-Cooccurrence-Rank)
 
-## 4. Automatic Timeline Generation
+## 4. Timeline Generation
 Generate complete timeline using delimiter and some principles, or generate simple timeline using grammar structure.  
   
-![ptimeline generation](Explanation-Material/proposed_timeline_generation_method_overview.png)
+![ptimeline generation](Explanation-Material/timeline_complete_and_simple.png)
   
-[(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Automatic-Timeline-Generation)
+[(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Timeline-Generation)
 
 # Usage
 ## Prerequisite
