@@ -67,10 +67,9 @@ def initialize_biographies(book: str, indexPair_s):
                 
                 update={'$set':
                         {'Name' : name,
-                         'Alias_s' : [],
+                         'EnglishName': "",
                          'Birth' : "",
                          'Death' : "",
-                         'BirthPlace' : "",
                          'Hometown' : "",
                          # PDF、傳記相關
                          'Book' : book,
@@ -78,11 +77,7 @@ def initialize_biographies(book: str, indexPair_s):
                          'StartPage' : int(startPage),
                          'EndPage' : int(indexPair_s[i+1][1]) - 1,
                          'Authors' : [],
-                         'Notes' : [],
                          'Footnotes' : [],
-                         # Summary
-                         'Experience' : [], # 經歷
-                         'ChronologicalTable' : [], # 年代表
                         }
                 }, 
 

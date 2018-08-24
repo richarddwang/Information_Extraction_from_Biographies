@@ -6,7 +6,7 @@ from NER import main as ner
 from Cooccurrence import main as cooccurrence
 from Relationship import main as relation
 from Graph import main as generate_graphs
-from Get_timeline import main as get_chronologicalTable
+from Get_Timeline import main as get_timeline
 
 def main():
     print("Check tools and environments")
@@ -21,14 +21,14 @@ def main_process():
     preprocess()
     print("NERing")
     ner()
-    print("Counting cooccurrence")
-    cooccurrence()
     print("Relation Analyzing")
     relation()
+    print("Counting cooccurrence")
+    cooccurrence()    
     print("Generating graphs")
     generate_graphs()
-    print("Generating chronologicalTable")
-    get_chronologicalTable()
+    print("Generating timeline")
+    get_timeline()
 
 def check_tools_and_environemnts():
     print("Checking output directories exist")
@@ -38,7 +38,7 @@ def check_tools_and_environemnts():
     makedirs_if_not_exist('./DataBase/ner_result')
     makedirs_if_not_exist('./DataBase/relation')
     makedirs_if_not_exist('./DataBase/cooccurrence')
-    makedirs_if_not_exist('./DataBase/chronological-table')
+    makedirs_if_not_exist('./DataBase/timeline')
     
     
     print("Checking python packages")

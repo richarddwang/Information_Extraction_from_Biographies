@@ -2,50 +2,50 @@ import re
 import os
 from pycorenlp import StanfordCoreNLP
 nlp = StanfordCoreNLP('http://localhost:9000')
-# Simplified and Traditional Chinese
+# opencc 用來繁簡轉換
 from opencc import OpenCC
 toTrad = OpenCC("s2t")
 toSimp = OpenCC("t2s")
-# database
+# 資料庫相關
 from pymongo import MongoClient
-client = MongoClient('localhost', 27017) # create a connection to Mongodb
-db = client['Summary'] # access database "Summary"
-db['relations'] # create collection "cooccurrence" if not exist
+client = MongoClient('localhost', 27017) # 建立對本地的Mongodb daemon 的連接
+db = client['Summary'] # 接觸"Summary" 資料庫
+db['relations'] # 如果不存在collection "relaitons" 則建立
 #
 from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
-from NER import KINSHIP_CHARS #
+from NER import KINSHIP_CHARS # 
 
 def main():
-    db.relations.remove() # remove data in collection if exist
-    update_kinships_to_db()
+    db.relations.remove() # 先清空舊的資料庫的relaitons
+    update_kinships_to_db() # 先把之前在NER作的親屬關係暫存還原回來
     parallelly_process(main_process, list(db.biographies.find()))
 
+# 先把之前在NER作的親屬關係暫存還原回來
 def update_kinships_to_db():
     for person in db.people.find():
         for (aliasType, alias) in person['Alias_s']:
             if aliasType == "親屬關係暫存":
                 biographee_name, kinship = alias.split(":")
                 db.relations.insert_one({
-                    'ID1' : None,
                     'Name1' : biographee_name,
                     'Relation' : kinship,
-                    'ID2' : None,
                     'Name2' : person['Name'],
                 })
-        
+
 def main_process(biographies):
     total_relations = []
     for biograpy in biographies:
         text = get_biography_text(biograpy)
-        people = get_people_in_text_within_people(text, db.people.find())
-        names = get_all_names_of_people(people)
+        people = get_people_in_text_within_people(text, db.people.find()) # 找出傳記裡的所有登場人物
+        names = get_all_names_of_people(people) # 取出所有登場人物的名子
         relations = []
+        # 中間部份是別人寫的密密麻麻不知道在幹嘛，不想看不想註解
         for name in names:
             lines_have_name = extract_line(text, name)
             for line in lines_have_name:
                 relations.extend(relationship(line, biograpy['Name'], name))
-        relations = filter_relations(relations)
-        output_relations_of_biography(relations, biograpy)
+        relations = filter_relations(relations) # 過濾到自己跟自己的關係，和親屬關係(避免重複)
+        output_relations_of_biography(relations, biograpy) # 將結果輸出成檔案方便看
         total_relations += relations
                 
     update_relations_to_db(total_relations)
@@ -212,10 +212,8 @@ def update_relations_to_db(relations):
         if isinstance(relation, list) and len(relation)==3:
             name1, rel, name2 = relation
             db.relations.insert_one(
-                {'ID1' : None,
-                 'Name1' : name1,
+                {'Name1' : name1,
                  'Relation' : rel,
-                 'ID2' : None,
                  'Name2' : name2,}
             )
 

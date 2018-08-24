@@ -548,7 +548,6 @@ def initialize_people(names, alias_tuples):
             update={'$set':
                     {'Name' : name,
                      'Alias_s' : [],
-                     'Identities' : [],
                     }
             }, 
             upsert=True, # 有紀錄就改它，沒有就建立紀錄

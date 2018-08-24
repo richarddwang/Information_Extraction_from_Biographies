@@ -5,14 +5,14 @@ import numpy as np
 from Utilities import parallelly_process, get_biography_text, get_people_in_text_within_people
 from nltk.parse.corenlp import CoreNLPDependencyParser
 dpsr = CoreNLPDependencyParser()
-# Simplified and Traditional Chinese
+# opencc 用來轉換繁簡
 from opencc import OpenCC
 toTrad = OpenCC("s2t")
 toSimp = OpenCC("t2s")
-# database
+# 資料庫相關
 from pymongo import MongoClient
-client = MongoClient('localhost', 27017) # create a connection to Mongodb
-db = client['Summary'] # access database "Summary"
+client = MongoClient('localhost', 27017) # 建立對本地的Mongodb daemon 的連接
+db = client['Summary'] # 接觸"Summary" 資料庫
 
 def get_timeline(text, concise_bool = False):
     positions_of_year = []
@@ -100,15 +100,15 @@ def get_text_by_name(path, person_name):
     text = f.read()
     return text
 
-def output_chronologicalTable(biograpy, ordered_chronologicalTable, whetherConcise):
+def output_timeline(biograpy, ordered_timeline, whetherConcise):
     try:
-        os.makedirs('./DataBase/chronological-table')
+        os.makedirs('./DataBase/timeline')
     except FileExistsError: # directory is exist
         pass
 
-    with open('./DataBase/chronological-table/{}-{}-{}{}.txt'.format(biograpy['Book'], biograpy['StartPage'], biograpy['Name'], "" if not whetherConcise else "_concise"), 'w', encoding='utf-8') as f:
+    with open('./DataBase/timeline/{}-{}-{}{}.txt'.format(biograpy['Book'], biograpy['StartPage'], biograpy['Name'], "" if not whetherConcise else "_concise"), 'w', encoding='utf-8') as f:
         print('\n#--------------------------------------------------#', file=f)
-        for key, value in ordered_chronologicalTable.items():
+        for key, value in ordered_timeline.items():
             print(key, ':', value, file=f)
         print('#--------------------------------------------------#\n', file=f)
 
@@ -116,10 +116,11 @@ def output_chronologicalTable(biograpy, ordered_chronologicalTable, whetherConci
 def main_process(biographies):
     for biography in biographies:
         text = get_biography_text(biography)
+        # 做兩次產生年譜，一次是完整版，一次是精簡版
         for whetherConcise in [False, True]:
-            chronologicalTable = get_timeline(text, concise_bool=whetherConcise)
-            ordered_chronologicalTable = sort_timeline_dict(chronologicalTable)
-            output_chronologicalTable(biography, ordered_chronologicalTable, whetherConcise)
+            timeline = get_timeline(text, concise_bool=whetherConcise)
+            ordered_timeline = sort_timeline_dict(timeline)
+            output_timeline(biography, ordered_timeline, whetherConcise) # 輸出成檔案方便看
 
 def main():
     parallelly_process(main_process, list(db.biographies.find()))

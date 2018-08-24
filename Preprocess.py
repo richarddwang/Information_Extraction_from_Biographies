@@ -166,7 +166,7 @@ def process_content(content, biography, footnote_indices):
         biography["Birth"] = title[1] # group1
         biography["Death"] = title[2] # group2
     else:
-        biography["Alias_s"].append(title[1])
+        biography["EnglishName"] = title[1]
         biography["Birth"] = title[2] 
         biography["Death"] = title[3]
     content = content.replace(title[0], "") # replace Whole match with empty string
