@@ -23,10 +23,7 @@ As a support of main relation extraction method, we can extract relation using g
   
 Take biography of "王世慶" for example (under the assumption that we detect correct grammar structure)
 
-| Principle | Text | Result Relation |
-| --------- | ---- | --------------- |
-| V + O | 民國56年（1967）先後**訪問** *陳逢源* 、 *黃旺成* 兩位先生。 | 王世慶 **訪問** 陳逢源<br/>王世慶 **訪問** 黃旺成|
-| S + O | 在 *林熊祥* 、 *林衡立* 等人 **鼓勵** 下 | 林熊祥 **鼓勵** 王世慶<br/>林衡立 **鼓勵** 王世慶 |
+![table of proposed relation extraction method](Explanation-Material/relation_sentence_structure.png)
   
 [(detail...） ](https://github.com/richardyy1188/Information_Extraction_from_Biographies/wiki/Relation-Extraction)
 
